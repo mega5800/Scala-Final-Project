@@ -1,9 +1,6 @@
 package models
 
-class Cost(stringID:String)
-{
-
-}
+class Cost(val costId: String, val userId :String, val costDetails: CostDetails)
 
 /*
 * struct cost:

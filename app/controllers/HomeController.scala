@@ -1,23 +1,31 @@
 package controllers
 
-import javax.inject._
 import play.api.mvc._
+import javax.inject._
 
-/**
- * This controller creates an `Action` to handle HTTP requests to the
- * application's home page.
- */
 @Singleton
 class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
+  val items: Seq[String] = (1 to 10).map(num => s"Item$num").toList
 
-  /**
-   * Create an Action to render an HTML page with a welcome message.
-   * The configuration in the `routes` file means that this method
-   * will be called when the application receives a `GET` request with
-   * a path of `/`.
-   */
-  def index = Action {
-    Ok(views.html.index("Your new application is ready."))
+  def index: Action[AnyContent] = Action { request =>
+    val usernameSession = request.session.get("username")
+    usernameSession.map { username =>
+      // TODO: grab username costs andd send them to index
+      Ok(views.html.index(items))
+    }.getOrElse(Redirect(routes.HomeController.loginPage))
   }
 
+  def loginPage: Action[AnyContent] = Action { implicit request =>
+    val usernameSession = request.session.get("username")
+    usernameSession.map { username =>
+      Redirect(routes.HomeController.index)  
+      }.getOrElse(Ok(views.html.login()))
+  }
+
+  def registerPage: Action[AnyContent] = Action { implicit request =>
+    val usernameSession = request.session.get("username")
+    usernameSession.map { _ =>
+      Redirect(routes.HomeController.index)  
+    }.getOrElse(Ok(views.html.register()))
+  }
 }
