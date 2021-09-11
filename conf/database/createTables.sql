@@ -1,4 +1,5 @@
-CREATE TABLE IF NOT EXISTS public.users
+-- Create database tables
+CREATE TABLE IF NOT EXISTS scaladb.public.users
 (
     id SERIAL PRIMARY KEY,
     username varchar(20) NOT NULL,
@@ -6,7 +7,7 @@ CREATE TABLE IF NOT EXISTS public.users
     email text NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS public.costs (
+CREATE TABLE IF NOT EXISTS scaladb.public.costs (
     id SERIAL PRIMARY KEY,
     user_id int4 REFERENCES users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
@@ -15,3 +16,8 @@ CREATE TABLE IF NOT EXISTS public.costs (
     cost_price NUMERIC NOT NULL
 );
 
+-- Grant all privileges to user scala
+GRANT ALL ON SCHEMA public TO scala;
+GRANT ALL ON SCHEMA public TO public;
+-- GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO scala;
+-- GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO scala;
