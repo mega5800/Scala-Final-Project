@@ -16,13 +16,15 @@ class UserController @Inject()(protected val dbConfigProvider: DatabaseConfigPro
     val credentials = request.body.asFormUrlEncoded.get // never empty
     val username = credentials("username").head
     val password = credentials("password").head
+    val email = credentials("email").head
 
     // assume it is empty
     var result: Result = Redirect(routes.HomeController.registerPage).flashing("error" -> "username and password fields must be provided")
- 
-    if(username.nonEmpty && password.nonEmpty)
+
+    if(username.nonEmpty && password.nonEmpty && checkEmailValidity(email))
     {
-        val userCreated = Await.result(userManagerModel.createUser(username, password), 5.seconds)
+      //checkEmailValidity will return {OK, emptyString, InvaludString}
+        val userCreated = Await.result(userManagerModel.createUser(username, password, email), 5.seconds)
 
         if(userCreated)
         {
@@ -36,6 +38,23 @@ class UserController @Inject()(protected val dbConfigProvider: DatabaseConfigPro
 
     Future(result)
   } 
+
+  def checkEmailValidity(emailToCheck:String):Boolean =
+    {
+      if (emailToCheck.nonEmpty) false
+
+      val emailRegex = """^[a-zA-Z0-9\.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$""".r
+
+      def check(e: String): Boolean = e match
+      {
+        case null                                           => false
+        case e if e.trim.isEmpty                            => false
+        case e if emailRegex.findFirstMatchIn(e).isDefined  => true
+        case _                                              => false
+      }
+
+      check(emailToCheck)
+    }
 
   def validateUser: Action[AnyContent] = Action.async { request =>
     val credentials = request.body.asFormUrlEncoded.get // never empty

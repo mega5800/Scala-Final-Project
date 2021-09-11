@@ -2,7 +2,8 @@ CREATE TABLE IF NOT EXISTS public.users
 (
     id SERIAL PRIMARY KEY,
     username varchar(20) NOT NULL,
-    password varchar(200) NOT NULL
+    password varchar(200) NOT NULL,
+    email text NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS public.costs (
@@ -13,3 +14,4 @@ CREATE TABLE IF NOT EXISTS public.costs (
     category TEXT NOT NULL,
     cost_price NUMERIC NOT NULL
 );
+
