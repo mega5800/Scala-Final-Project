@@ -10,6 +10,10 @@ GET     /register                   controllers.HomeController.registerPage
 GET     /logout                     controllers.UserController.logout
 POST    /createUser                 controllers.UserController.createUser
 POST    /validateUser               controllers.UserController.validateUser
+GET     /forgotPassword             controllers.UserController.forgotPasswordPage
+GET     /passwordReset              controllers.UserController.passwordResetPage(token)
+POST    /requestPasswordReset       controllers.UserController.requestPasswordReset
+POST    /resetPassword              controllers.UserController.resetPassword
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

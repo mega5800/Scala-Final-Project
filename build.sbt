@@ -15,7 +15,9 @@ lazy val `scalafinalproject` = (project in file(".")).enablePlugins(PlayScala).s
         "com.typesafe.play" %% "play-json" % "2.8.1",
         "org.postgresql" % "postgresql" % "42.2.11",
         "com.typesafe.slick" %% "slick-hikaricp" % "3.3.2",
-        "org.mindrot" % "jbcrypt" % "0.4"
+        "org.mindrot" % "jbcrypt" % "0.4",
+        "com.typesafe.play" %% "play-mailer" % "8.0.1",
+        "com.typesafe.play" %% "play-mailer-guice" % "8.0.1"
         // "com.google.firebase" % "firebase-admin" % "5.5.0",
         // "org.apache.hadoop" % "hadoop-client" % "2.7.2"
         // "com.google.guava" % "guava" % "30.1.1-jre",

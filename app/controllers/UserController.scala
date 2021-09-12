@@ -7,9 +7,12 @@ import slick.jdbc.JdbcProfile
 import javax.inject._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
+import play.api.libs.mailer._
+import play.api.mvc._
 
-class UserController @Inject()(protected val dbConfigProvider: DatabaseConfigProvider, cc: ControllerComponents)(implicit executionContext: ExecutionContext)
- extends AbstractController(cc) with HasDatabaseConfigProvider[JdbcProfile]{
+class UserController @Inject()(protected val dbConfigProvider: DatabaseConfigProvider, mailerClient: MailerClient, cc: ControllerComponents)(implicit executionContext: ExecutionContext)
+ extends AbstractController(cc) with HasDatabaseConfigProvider[JdbcProfile] {
+
   private val userManagerModel: UserManagerModel = new UserManagerModel(db)
 
   def createUser: Action[AnyContent] = Action.async { request =>
@@ -84,4 +87,66 @@ class UserController @Inject()(protected val dbConfigProvider: DatabaseConfigPro
   def logout: Action[AnyContent] = Action {
     Redirect(routes.HomeController.loginPage).withNewSession
    }
+
+  def forgotPasswordPage: Action[AnyContent] = Action { implicit request =>
+    Ok(views.html.forgotPasswordPage())
+  }
+
+  def passwordResetPage(passwordResetToken: String): Action[AnyContent] = Action.async { implicit request =>
+    val isPasswordTokenValid = Await.result(userManagerModel.isPasswordResetTokenValid(passwordResetToken), 3.seconds)
+
+    if(isPasswordTokenValid){
+      Future.successful(Ok(views.html.passwordResetPage(passwordResetToken)))
+    }
+    else{
+      Future.successful(Forbidden("You cannot access this page."))
+    }
+  }
+
+  def requestPasswordReset: Action[AnyContent] = Action.async { implicit request =>
+    val email = request.body.asFormUrlEncoded.get("email").head
+    val passwordResetToken = Await.result(userManagerModel.createPasswordResetToken(email), 3.seconds)
+
+    if(passwordResetToken.nonEmpty){
+      sendPasswordTokenResetLinkToEmail(passwordResetToken.get, email)
+      Future.successful(Redirect(routes.UserController.forgotPasswordPage).flashing("message" -> "Your request has been sent, if your email is in your systems you will receive an email shortly."))
+    }
+    else{
+      Future.successful(Redirect(routes.UserController.forgotPasswordPage).flashing("message" -> "There is a problem, please try again later."))
+    }
+  }
+
+  def resetPassword: Action[AnyContent] = Action.async { request =>
+    val passwordResetData = request.body.asFormUrlEncoded.get
+    val newPassword = passwordResetData("newPassword").head
+    val confirmPassword = passwordResetData("confirmPassword").head
+    val passwordResetToken = passwordResetData("passwordResetToken").head
+
+    if(newPassword != confirmPassword) {
+      Future.successful(Redirect(routes.UserController.passwordResetPage(passwordResetToken)).flashing("message" -> "Passwords do not match."))
+    }
+    else{
+      val passwordChanged = Await.result(userManagerModel.resetPassword(passwordResetToken, newPassword), 3.seconds)
+
+      if(passwordChanged){
+        Future.successful(Redirect(routes.HomeController.loginPage))
+      }
+      else{
+        Future.successful(Redirect(routes.UserController.passwordResetPage(passwordResetToken)).flashing("message" -> "There was a problem, please try again later."))
+      }
+    }
+  }
+
+  // TODO: figure out how to move this to a service component
+  private def sendPasswordTokenResetLinkToEmail(passwordResetToken: String, emailTo: String) = {
+    val passwordResetLink: String = s"http://localhost:9000/passwordReset?token=$passwordResetToken"
+    println(s"Sending mail to $emailTo")
+    val email = Email(
+                  subject = "scalaProject - Password reset link",
+                  from="scalaproject123@gmail.com",
+                  to = Seq(emailTo), 
+                  bodyText = Some(passwordResetLink))
+
+       mailerClient.send(email)
+  }
 }
