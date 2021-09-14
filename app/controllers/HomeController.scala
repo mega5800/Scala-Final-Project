@@ -10,7 +10,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   def index: Action[AnyContent] = Action { request =>
     val usernameSession = request.session.get("username")
     usernameSession.map { username =>
-      // TODO: grab username costs andd send them to index
+      // TODO: grab username costs and send them to index
       Ok(views.html.index(items))
     }.getOrElse(Redirect(routes.HomeController.loginPage))
   }

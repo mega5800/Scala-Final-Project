@@ -3,8 +3,8 @@ package controllers
 import models.UserManagerModel
 import play.api.libs.concurrent.Futures
 import play.api.mvc._
+import slick.jdbc.JdbcProfile
 import services.MailerService
-
 import javax.inject._
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
@@ -19,57 +19,52 @@ class UserController @Inject()(userManagerModel: UserManagerModel, mailerService
   extends AbstractController(cc) {
   private val maximumTimeout = 3.seconds
 
+  private val loginCredentialsChecker:LoginCredentialsChecker = new LoginCredentialsChecker()
+  private val registerCredentialsChecker:RegisterCredentialsChecker = new RegisterCredentialsChecker()
+
+  private var errorMessageRedirectObject:Result = null
+  private var errorMessageString:Option[String] = None
+
   def createUser: Action[AnyContent] = Action.async { request =>
     val credentials = request.body.asFormUrlEncoded.get // never empty
-    val username = credentials("username").head
-    val password = credentials("password").head
-    val email = credentials("email").head
+    registerCredentialsChecker.UserName = credentials("username").head
+    registerCredentialsChecker.Password = credentials("password").head
+    registerCredentialsChecker.Email = credentials("email").head
 
-    // assume it is empty
-    var result: Future[Result] = Future.successful(Redirect(routes.HomeController.registerPage).flashing("error" -> "username and password fields must be provided"))
-
-    if (username.nonEmpty && password.nonEmpty && checkEmailValidity(email)) {
-      //checkEmailValidity will return {OK, emptyString, InvaludString}
-      result = userManagerModel.createUser(username, password, email).withTimeout(maximumTimeout).transformWith {
+    errorMessageString = registerCredentialsChecker.getRegisterCredentialsValidityErrorMessage()
+    if (errorMessageString.isEmpty)
+    {
+      //TODO: move this code into seprate method
+      result = userManagerModel.createUser(registerCredentialsChecker.UserName, registerCredentialsChecker.Password, registerCredentialsChecker.Email).withTimeout(maximumTimeout).transformWith {
         case Success(userId) => Future.successful(Redirect(routes.HomeController.loginPage))
         case Failure(exception) => exception match {
           case sqlException: SQLException =>
             println(sqlException)
-            Future.successful(Redirect(routes.HomeController.registerPage).flashing("error" -> "Failed to create user."))
+            Future.successful(Redirect(routes.HomeController.registerPage).flashing("error" -> "Failed to create user"))
           case exception: Throwable =>
             println(exception.getMessage)
             Future.successful(InternalServerError("Oops, something went wrong!"))
         }
       }
+      //end of new method
+    }
+    else
+    {
+      errorMessageRedirectObject = Redirect(routes.HomeController.registerPage).flashing("error" -> errorMessageString.get)
     }
 
-    result
-  }
-
-  def checkEmailValidity(emailToCheck: String): Boolean = {
-    if (emailToCheck.nonEmpty) false
-
-    val emailRegex = """^[a-zA-Z0-9\.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$""".r
-
-    def check(e: String): Boolean = e match {
-      case null => false
-      case e if e.trim.isEmpty => false
-      case e if emailRegex.findFirstMatchIn(e).isDefined => true
-      case _ => false
-    }
-
-    check(emailToCheck)
+    Future(errorMessageRedirectObject
   }
 
   def validateUser: Action[AnyContent] = Action.async { request =>
     val credentials = request.body.asFormUrlEncoded.get // never empty
-    val username = credentials("username").head
-    val password = credentials("password").head
+    loginCredentialsChecker.UserName = credentials("username").head
+    loginCredentialsChecker.Password = credentials("password").head
 
-    // assume it is empty
-    var result: Future[Result] = Future.successful(Redirect(routes.HomeController.loginPage).flashing("error" -> "username and password fields must be provided"))
-
-    if (username.nonEmpty && password.nonEmpty) {
+    errorMessageString = loginCredentialsChecker.getLoginCredentialsValidityErrorMessage()
+    if (errorMessageString.isEmpty)
+    {
+      //TODO: move this code into seprate method
       result = userManagerModel.validateUser(username, password).withTimeout(maximumTimeout).transformWith {
         case Success(userValidated) =>
           if (userValidated) {
@@ -84,10 +79,13 @@ class UserController @Inject()(userManagerModel: UserManagerModel, mailerService
             Future.successful(InternalServerError("Opps, something went wrong!"))
         }
       }
+      //end of new method
     }
-
-    result
-  }
+    else
+    {
+      errorMessageRedirectObject = Redirect(routes.HomeController.loginPage).flashing("error" -> errorMessageString.ge
+     }
+                                                 
 
   def logout: Action[AnyContent] = Action {
     Redirect(routes.HomeController.loginPage).withNewSession
@@ -95,7 +93,8 @@ class UserController @Inject()(userManagerModel: UserManagerModel, mailerService
 
   def forgotPasswordPage: Action[AnyContent] = Action { implicit request =>
     Ok(views.html.forgotPasswordPage())
-  }
+  }}
+                               
 
   def passwordResetPage(passwordResetToken: String): Action[AnyContent] = Action.async { implicit request =>
     userManagerModel.isPasswordResetTokenValid(passwordResetToken).withTimeout(maximumTimeout).transformWith {
@@ -112,7 +111,12 @@ class UserController @Inject()(userManagerModel: UserManagerModel, mailerService
           Future.successful(InternalServerError("Oops, something went wrong!"))
       }
     }
+    Future(errorMessageRedirectObject)
   }
+
+  def logout: Action[AnyContent] = Action {
+    Redirect(routes.HomeController.loginPage).withNewSession
+   }
 
   def requestPasswordReset: Action[AnyContent] = Action.async { implicit request =>
     val email = request.body.asFormUrlEncoded.get("email").head

@@ -1,3 +1,9 @@
+package models
+
+class CostsManagerModel
+{
+}
+
 // package models
 // import org.joda.time.DateTime
 
@@ -21,4 +27,3 @@
 
 //   def EditCostInCostList(editedCost: Cost) = ???
 // }
-
