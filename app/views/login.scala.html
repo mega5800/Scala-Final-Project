@@ -1,0 +1,16 @@
+@()(implicit request: RequestHeader, flash: Flash)
+@main("Login page") {
+    <form method= "post" action="@routes.UserController.validateUser">
+        @helper.CSRF.formField
+        <label for="username">Username:</label>
+        <input type="text" name="username" id="username">
+        <br>
+        <label for="password">Password:</label>
+        <input type="password" name="password" id="password">
+        <br>
+        <input type="submit" value="Login">
+    </form>
+    <div><span style="color: red">@flash.get("error")</span></div>
+    <a href="@routes.HomeController.registerPage">Register here</a>
+    <a href="@routes.UserController.forgotPasswordPage">Forgot password</a>
+}
