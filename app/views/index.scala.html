@@ -1,12 +1,23 @@
-@(items: Seq[String])
+@(costs: Seq[Tables#CostsRow])
 
 @main("Home page") {
-    <ul>
-        @for(item <- items) {
-        
-            <li>@item</li>
+    <h1>Your detailed costs</h1>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Purchase Date</th>
+            <th>Category</th>
+            <th>Price</th>
+        </tr>
+        @for(cost <- costs) {
+            <tr>
+                <td>@{cost.name}</td>
+                <td>@{cost.purchaseDate.toString}</td>
+                <td>@{cost.category}</td>
+                <td>@{cost.costPrice.toString}</td>
+            </tr>
         }
-    </ul>
+    </table>
 
     <form action="@routes.UserController.logout">
         <input type="submit" value="Logout">

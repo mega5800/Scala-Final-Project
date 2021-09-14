@@ -6,10 +6,11 @@ import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.PostgresProfile.api._
 
 import java.security.SecureRandom
-import java.sql.{SQLException, Timestamp}
+import java.sql.{Blob, SQLException, Timestamp}
 import java.util.Base64
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import javax.sql.rowset.serial.SerialBlob
 import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 
