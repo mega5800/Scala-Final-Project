@@ -1,6 +1,6 @@
-package models
+// package models
 
-class Cost(val costId: String, val userId :String, val costDetails: CostDetails)
+//class Cost(val costId: String, val userId :String, val costDetails: CostDetails)
 
 /*
 * struct cost:

@@ -1,5 +1,5 @@
-package models
-import org.joda.time.DateTime
-import models.Categories.Categories
+// package models
+// import models.Categories.Categories
+// import org.joda.time.DateTime
 
-class CostDetails(val costName: String, val purchaseDate: DateTime, val category: Categories, val costPrice: Float)
+// class CostDetails(val costName: String, val purchaseDate: DateTime, val category: Categories, val costPrice: Float)
