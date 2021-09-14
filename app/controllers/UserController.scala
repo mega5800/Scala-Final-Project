@@ -22,7 +22,7 @@ class UserController @Inject()(userManagerModel: UserManagerModel, mailerService
   private val loginCredentialsChecker:LoginCredentialsChecker = new LoginCredentialsChecker()
   private val registerCredentialsChecker:RegisterCredentialsChecker = new RegisterCredentialsChecker()
 
-  private var errorMessageRedirectObject:Result = null
+  private var resultObject:Result = null
   private var errorMessageString:Option[String] = None
 
   def createUser: Action[AnyContent] = Action.async { request =>
@@ -35,25 +35,24 @@ class UserController @Inject()(userManagerModel: UserManagerModel, mailerService
     if (errorMessageString.isEmpty)
     {
       //TODO: move this code into seprate method
-      result = userManagerModel.createUser(registerCredentialsChecker.UserName, registerCredentialsChecker.Password, registerCredentialsChecker.Email).withTimeout(maximumTimeout).transformWith {
+      resultObject = userManagerModel.createUser(registerCredentialsChecker.UserName, registerCredentialsChecker.Password, registerCredentialsChecker.Email).withTimeout(maximumTimeout).transformWith {
         case Success(userId) => Future.successful(Redirect(routes.HomeController.loginPage))
         case Failure(exception) => exception match {
           case sqlException: SQLException =>
             println(sqlException)
-            Future.successful(Redirect(routes.HomeController.registerPage).flashing("error" -> "Failed to create user"))
+            //Future.successful(Redirect(routes.HomeController.registerPage).flashing("error" -> "Failed to create user"))
           case exception: Throwable =>
             println(exception.getMessage)
             Future.successful(InternalServerError("Oops, something went wrong!"))
         }
-      }
       //end of new method
     }
     else
     {
-      errorMessageRedirectObject = Redirect(routes.HomeController.registerPage).flashing("error" -> errorMessageString.get)
+      resultObject = Redirect(routes.HomeController.registerPage).flashing("error" -> errorMessageString.get)
     }
 
-    Future(errorMessageRedirectObject
+    Future(resultObject)
   }
 
   def validateUser: Action[AnyContent] = Action.async { request =>
@@ -65,10 +64,10 @@ class UserController @Inject()(userManagerModel: UserManagerModel, mailerService
     if (errorMessageString.isEmpty)
     {
       //TODO: move this code into seprate method
-      result = userManagerModel.validateUser(username, password).withTimeout(maximumTimeout).transformWith {
+      resultObject = userManagerModel.validateUser(loginCredentialsChecker.UserName, loginCredentialsChecker.Password).withTimeout(maximumTimeout).transformWith {
         case Success(userValidated) =>
           if (userValidated) {
-            Future.successful(Redirect(routes.HomeController.index).withSession("username" -> username))
+            Future.successful(Redirect(routes.HomeController.index).withSession("username" -> loginCredentialsChecker.UserName))
           }
           else {
             Future.successful(Redirect(routes.HomeController.loginPage).flashing("error" -> "Wrong username or password"))
@@ -83,7 +82,7 @@ class UserController @Inject()(userManagerModel: UserManagerModel, mailerService
     }
     else
     {
-      errorMessageRedirectObject = Redirect(routes.HomeController.loginPage).flashing("error" -> errorMessageString.ge
+      resultObject = Redirect(routes.HomeController.loginPage).flashing("error" -> errorMessageString.ge
      }
                                                  
 
@@ -111,7 +110,7 @@ class UserController @Inject()(userManagerModel: UserManagerModel, mailerService
           Future.successful(InternalServerError("Oops, something went wrong!"))
       }
     }
-    Future(errorMessageRedirectObject)
+    Future(resultObject)
   }
 
   def logout: Action[AnyContent] = Action {
