@@ -26,9 +26,8 @@ class UserController @Inject()(protected val dbConfigProvider: DatabaseConfigPro
         CredentialsValidityStates.EmptyEmail->"Please enter an email",
         CredentialsValidityStates.InvalidEmail->"Please enter a valid email")
 
-  // SHARON: I found out this regex isn't really working well
-  // should we try to find a working regex or leave it as it is???
-  private val emailRegex = """^[a-zA-Z0-9\.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$""".r
+  //TODO: check new regex expression
+  private val emailRegex = """(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])""".r
 
   //TODO: merge 2 functions into one!
   def checkCredentialsValidity(userName:String, password:String, email:String) : CredentialsValidityStates =
@@ -76,8 +75,7 @@ class UserController @Inject()(protected val dbConfigProvider: DatabaseConfigPro
 
     val credentialsValidityState: CredentialsValidityStates = checkCredentialsValidity(username, password, email)
 
-    // SHARON: How can i define a null result???
-    var result: Result = Redirect(routes.HomeController.registerPage).flashing("" -> "")
+    var result: Result = null
     if (credentialsValidityState == CredentialsValidityStates.CredentialsValid)
     {
       val userCreated = Await.result(userManagerModel.createUser(username, password, email), 5.seconds)
@@ -105,8 +103,7 @@ class UserController @Inject()(protected val dbConfigProvider: DatabaseConfigPro
     val password = credentials("password").head
 
     // AVITAL: assume it is empty
-    // SHARON: How can i define a null result???
-    var result: Result = Redirect(routes.HomeController.loginPage).flashing("" -> "")
+    var result: Result = null
     val credentialsValidityState: CredentialsValidityStates = checkCredentialsValidity(username, password)
     if (credentialsValidityState == CredentialsValidityStates.CredentialsValid)
     {
