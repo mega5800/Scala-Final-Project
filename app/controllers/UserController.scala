@@ -2,16 +2,15 @@ package controllers
 
 import models.UserManagerModel
 import play.api.libs.concurrent.Futures
-import play.api.mvc._
-import slick.jdbc.JdbcProfile
-import services.MailerService
-import javax.inject._
-import scala.concurrent.duration._
-import scala.util.{Failure, Success, Try}
 import play.api.libs.concurrent.Futures._
+import play.api.mvc._
+import services.MailerService
 
 import java.sql.SQLException
-import scala.concurrent.{Await, ExecutionContext, Future}
+import javax.inject._
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 // TODO: handle exceptions thrown from Future
 @Singleton
@@ -26,6 +25,30 @@ class UserController @Inject()(userManagerModel: UserManagerModel, mailerService
   private var resultFuture: Future[Result] = null
   private var errorMessageString: Option[String] = None
 
+  private def getResultForUserCreation(username: String, password: String, email: String): Future[Result] = {
+    val handler: FutureResultHandler[Int] = FutureResultHandler(userManagerModel.createUser(username, password, email))
+    handler.handle(
+      onSuccess = userId => Future.successful(Redirect(routes.HomeController.loginPage)),
+      onFailure = {
+        case e:SQLException =>
+          Future.successful(Redirect(routes.HomeController.registerPage).flashing("error" -> "Failed to create user"))
+      }
+    )
+  }
+
+  private def getResultForUserValidation(username: String, password: String): Future[Result] = {
+    val handler = FutureResultHandler(userManagerModel.validateUser(username, password))
+
+    handler.handle { userValidated =>
+      if (userValidated) {
+        Future.successful(Redirect(routes.HomeController.index).withSession("username" -> loginCredentialsChecker.UserName))
+      }
+      else {
+        Future.successful(Redirect(routes.HomeController.loginPage).flashing("error" -> "Wrong username or password"))
+      }
+    }
+  }
+
   def createUser: Action[AnyContent] = Action.async { request =>
     val credentials = request.body.asFormUrlEncoded.get // never empty
     registerCredentialsChecker.UserName = credentials("username").head
@@ -33,30 +56,13 @@ class UserController @Inject()(userManagerModel: UserManagerModel, mailerService
     registerCredentialsChecker.Email = credentials("email").head
 
     errorMessageString = registerCredentialsChecker.getRegisterCredentialsValidityErrorMessage()
-    var result: Future[Result] = null
 
     if (errorMessageString.isEmpty) {
-      //TODO: move this code into seprate method
-      resultFuture = userManagerModel.createUser(registerCredentialsChecker.UserName, registerCredentialsChecker.Password, registerCredentialsChecker.Email)
-        .withTimeout(maximumTimeout)
-        .transformWith {
-          case Success(userId) => Future.successful(Redirect(routes.HomeController.loginPage))
-          case Failure(exception) => exception match {
-            case sqlException: SQLException =>
-              println(sqlException)
-              Future.successful(Redirect(routes.HomeController.registerPage).flashing("error" -> "Failed to create user"))
-            case exception: Throwable =>
-              println(exception.getMessage)
-              Future.successful(InternalServerError("Oops, something went wrong!"))
-          }
-        }
-      //end of new method
+      getResultForUserCreation(registerCredentialsChecker.UserName, registerCredentialsChecker.Password, registerCredentialsChecker.Email)
     }
     else {
-      resultFuture = Future.successful(Redirect(routes.HomeController.registerPage).flashing("error" -> errorMessageString.get))
+      Future.successful(Redirect(routes.HomeController.registerPage).flashing("error" -> errorMessageString.get))
     }
-
-    resultFuture
   }
 
   def validateUser: Action[AnyContent] = Action.async { request =>
@@ -66,28 +72,11 @@ class UserController @Inject()(userManagerModel: UserManagerModel, mailerService
 
     errorMessageString = loginCredentialsChecker.getLoginCredentialsValidityErrorMessage()
     if (errorMessageString.isEmpty) {
-      //TODO: move this code into seprate method
-      resultFuture = userManagerModel.validateUser(loginCredentialsChecker.UserName, loginCredentialsChecker.Password).withTimeout(maximumTimeout).transformWith {
-        case Success(userValidated) =>
-          if (userValidated) {
-            Future.successful(Redirect(routes.HomeController.index).withSession("username" -> loginCredentialsChecker.UserName))
-          }
-          else {
-            Future.successful(Redirect(routes.HomeController.loginPage).flashing("error" -> "Wrong username or password"))
-          }
-        case Failure(exception) => exception match {
-          case exception: Exception =>
-            println(exception.getMessage)
-            Future.successful(InternalServerError("Oops, something went wrong!"))
-        }
-      }
-      //end of new method
+      getResultForUserValidation(loginCredentialsChecker.UserName, loginCredentialsChecker.Password)
     }
     else {
-      resultFuture = Future.successful(Redirect(routes.HomeController.loginPage).flashing("error" -> errorMessageString.get))
+      Future.successful(Redirect(routes.HomeController.loginPage).flashing("error" -> errorMessageString.get))
     }
-
-    resultFuture
   }
 
 
@@ -95,8 +84,9 @@ class UserController @Inject()(userManagerModel: UserManagerModel, mailerService
     Redirect(routes.HomeController.loginPage).withNewSession
   }
 
-  def forgotPasswordPage: Action[AnyContent] = Action { implicit request =>
-    Ok(views.html.forgotPasswordPage())
+  def forgotPasswordPage: Action[AnyContent] = Action {
+    implicit request =>
+      Ok(views.html.forgotPasswordPage())
   }
 
   def passwordResetPage(passwordResetToken: String): Action[AnyContent] = Action.async {
@@ -123,7 +113,9 @@ class UserController @Inject()(userManagerModel: UserManagerModel, mailerService
 
       userManagerModel.createPasswordResetToken(email).withTimeout(maximumTimeout).transformWith {
         case Success(passwordResetToken) =>
-          val passwordResetLink: String = s"http://localhost:9000/passwordReset?token=${passwordResetToken}"
+          val passwordResetLink: String = s"http://localhost:9000/passwordReset?token=${
+            passwordResetToken
+          }"
           mailerService.sendSimpleEmail(emailTo = email, subject = "ScalaProject - Password reset link", content = passwordResetLink)
           Future.successful(Redirect(routes.UserController.forgotPasswordPage).flashing("message" -> "Your request has been sent, if your email is in your systems you will receive an email shortly."))
         case Failure(exception) => exception match {
