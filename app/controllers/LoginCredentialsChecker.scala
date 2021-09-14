@@ -1,8 +1,6 @@
 package controllers
 
 import controllers.CredentialsValidityStates.CredentialsValidityStates
-import play.api.mvc.{Call, Result}
-import play.api.mvc.Results.Redirect
 
 class LoginCredentialsChecker(private var userName:String="", private var password:String="")
 {
@@ -34,35 +32,16 @@ class LoginCredentialsChecker(private var userName:String="", private var passwo
     credentialsValidityState
   }
 
-  def getLoginCredentialsValidityResult(suitableWebPage:Call):Result =
+  def getLoginCredentialsValidityErrorMessage():Option[String] =
   {
-    var result: Result = null
+    var errorMessageResult: Option[String] = None
     val credentialsValidityState: CredentialsValidityStates = checkLoginCredentialsValidity()
 
     if (credentialsValidityState != CredentialsValidityStates.CredentialsValid)
     {
-      result = Redirect(suitableWebPage).flashing("error" -> credentialsValidityStatesMap(credentialsValidityState))
+      errorMessageResult = Option(credentialsValidityStatesMap(credentialsValidityState))
     }
 
-    result
+    errorMessageResult
   }
 }
-
-/*
-class MobilePhone
-{
- private[this] var number: Int = 8;
- def volume: Int = number;
- def volume_=(vol: Int)
- {
-if(vol>0)
-{
- number = vol;
-}
-else
-{
-number = 0
-}
- }
-}
-* */

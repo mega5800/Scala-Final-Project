@@ -1,8 +1,6 @@
 package controllers
 
 import controllers.CredentialsValidityStates.CredentialsValidityStates
-import play.api.mvc.Results.Redirect
-import play.api.mvc.{Call, Result}
 
 class RegisterCredentialsChecker(private var userName:String="", private var password:String="", private var email:String="")
 {
@@ -23,20 +21,20 @@ class RegisterCredentialsChecker(private var userName:String="", private var pas
   def Password:String = loginCredentialsChecker.Password
   def Password_=(newPassword:String) {loginCredentialsChecker.Password = newPassword}
 
-  def getRegisterCredentialsValidityResult(suitableWebPage:Call):Result =
+  def getRegisterCredentialsValidityErrorMessage():Option[String] =
   {
-    var result:Result = loginCredentialsChecker.getLoginCredentialsValidityResult(suitableWebPage)
+    var errorMessageResult: Option[String] = loginCredentialsChecker.getLoginCredentialsValidityErrorMessage()
 
-    if (result == null)
+    if (errorMessageResult.isEmpty)
     {
       val credentialsValidityState = checkRegisterCredentialsValidity()
       if (credentialsValidityState != CredentialsValidityStates.CredentialsValid)
       {
-        result = Redirect(suitableWebPage).flashing("error" -> credentialsValidityStatesMap(credentialsValidityState))
+        errorMessageResult = Option(credentialsValidityStatesMap(credentialsValidityState))
       }
     }
 
-    result
+    errorMessageResult
   }
 
   private def checkRegisterCredentialsValidity():CredentialsValidityStates =

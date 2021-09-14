@@ -16,28 +16,35 @@ class UserController @Inject()(protected val dbConfigProvider: DatabaseConfigPro
   private val loginCredentialsChecker:LoginCredentialsChecker = new LoginCredentialsChecker()
   private val registerCredentialsChecker:RegisterCredentialsChecker = new RegisterCredentialsChecker()
 
+  private var errorMessageRedirectObject:Result = null
+  private var errorMessageString:Option[String] = None
+
   def createUser: Action[AnyContent] = Action.async { request =>
     val credentials = request.body.asFormUrlEncoded.get // never empty
     registerCredentialsChecker.UserName = credentials("username").head
     registerCredentialsChecker.Password = credentials("password").head
     registerCredentialsChecker.Email = credentials("email").head
 
-    var result: Result = registerCredentialsChecker.getRegisterCredentialsValidityResult(routes.HomeController.registerPage)
-    if (result == null)
+    errorMessageString = registerCredentialsChecker.getRegisterCredentialsValidityErrorMessage()
+    if (errorMessageString.isEmpty)
     {
       val userCreated = Await.result(userManagerModel.createUser(registerCredentialsChecker.UserName, registerCredentialsChecker.Password, registerCredentialsChecker.Email), 5.seconds)
 
       if(userCreated)
       {
-        result = Redirect(routes.HomeController.loginPage)
+        errorMessageRedirectObject = Redirect(routes.HomeController.loginPage)
       }
       else
       {
-        result = Redirect(routes.HomeController.registerPage).flashing("error" -> "Failed to create user.")
+        errorMessageRedirectObject = Redirect(routes.HomeController.registerPage).flashing("error" -> "Failed to create user")
       }
     }
+    else
+    {
+      errorMessageRedirectObject = Redirect(routes.HomeController.registerPage).flashing("error" -> errorMessageString.get)
+    }
 
-    Future(result)
+    Future(errorMessageRedirectObject)
   }
 
   def validateUser: Action[AnyContent] = Action.async { request =>
@@ -45,22 +52,26 @@ class UserController @Inject()(protected val dbConfigProvider: DatabaseConfigPro
     loginCredentialsChecker.UserName = credentials("username").head
     loginCredentialsChecker.Password = credentials("password").head
 
-    var result: Result = loginCredentialsChecker.getLoginCredentialsValidityResult(routes.HomeController.loginPage)
-    if (result == null)
+    errorMessageString = loginCredentialsChecker.getLoginCredentialsValidityErrorMessage()
+    if (errorMessageString.isEmpty)
     {
       val userValidated = Await.result(userManagerModel.validateUser(loginCredentialsChecker.UserName, loginCredentialsChecker.Password), 5.seconds)
 
       if(userValidated)
       {
-        result = Redirect(routes.HomeController.index).withSession("username" -> loginCredentialsChecker.UserName)
+        errorMessageRedirectObject = Redirect(routes.HomeController.index).withSession("username" -> loginCredentialsChecker.UserName)
       }
       else
       {
-        result = Redirect(routes.HomeController.loginPage).flashing("error" -> "Wrong username or password")
+        errorMessageRedirectObject = Redirect(routes.HomeController.loginPage).flashing("error" -> "Wrong username or password")
       }
     }
+    else
+    {
+      errorMessageRedirectObject = Redirect(routes.HomeController.loginPage).flashing("error" -> errorMessageString.get)
+    }
 
-    Future(result)
+    Future(errorMessageRedirectObject)
   }
 
   def logout: Action[AnyContent] = Action {
