@@ -12,18 +12,21 @@ import scala.async.Async.{async, await}
 
 
 class CostsManagerModel @Inject()(dbConfigProvider: DatabaseConfigProvider, userManagerModel: UserManagerModel)(implicit executionContext: ExecutionContext) extends DatabaseModel(dbConfigProvider) {
-  def getCostsForUser(username: String): Future[Seq[CostsRow]] = async {
-    val userOption = await(userManagerModel.getUserByUsername(username))
+  def getCostsForUser(userId: Int): Future[Seq[CostsRow]] = {
+    val getCostsForUserQuery = Costs.filter(_.userId === userId)
 
-    userOption match {
-      case Some(foundUser) =>
-        val getCostsForUserQuery = for {
-          (user, costs) <- Users join Costs on (_.id === _.userId)
-          if user.username === foundUser.username
-        } yield costs
-
-        await(database.run(getCostsForUserQuery.result))
-      case None => throw new SQLException(s"[getCostsForUser]: user ${username} does not exist")
-    }
+    database.run(getCostsForUserQuery.result)
   }
+
+  def getCostForUser(userId: Int, costId: Int): Future[CostsRow] = ???
+
+  def addSingleCostForUser(userId: Int, costToAdd: CostsRow): Future[Boolean] = ???
+
+  def updateCostForUser(userId: Int, updatedCost: CostsRow): Future[Boolean] = ???
+
+  def deleteCostForUser(userId: Int, costId: Int): Future[Boolean] = ???
+
+  def deleteAllCostsForUser(userId: Int): Future[Boolean] = ???
+
+  def addCostsForUser(userId: Int, costsToAdd: Seq[CostsRow]): Future[Boolean] = ???
 }

@@ -2,22 +2,37 @@
 
 @main("Home page") {
     <h1>Your detailed costs</h1>
-    <table>
-        <tr>
-            <th>Name</th>
-            <th>Purchase Date</th>
-            <th>Category</th>
-            <th>Price</th>
-        </tr>
-        @for(cost <- costs) {
-            <tr>
-                <td>@{cost.name}</td>
-                <td>@{cost.purchaseDate.toString}</td>
-                <td>@{cost.category}</td>
-                <td>@{cost.costPrice.toString}</td>
-            </tr>
+    @{
+        if(costs.length > 0){
+            <table>
+                <tr>
+                    <th>Name</th>
+                    <th>Purchase Date</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                </tr>
+
+                @{
+            for(cost <- costs){
+                <tr>
+                    <td>@{cost.name}</td>
+                    <td>@{cost.purchaseDate.toString}</td>
+                    <td>@{cost.category}</td>
+                    <td>@{cost.costPrice.toString}</td>
+                </tr>
+            }
+            }
+            </table>
+
         }
-    </table>
+        else{
+            <div>No details to display :(</div>
+        }
+    }
+
+
+
+
 
     <form action="@routes.UserController.logout">
         <input type="submit" value="Logout">

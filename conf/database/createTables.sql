@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS scaladb.public.users
     id SERIAL PRIMARY KEY,
     username varchar(20) UNIQUE NOT NULL,
     password varchar(200) NOT NULL,
-    email text UNIQUE NOT NULL
+    email text UNIQUE NOT NULL,
+    created_at TIMESTAMP default CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS scaladb.public.costs (
@@ -25,6 +26,12 @@ CREATE TABLE IF NOT EXISTS scaladb.public.password_requests (
   user_id int4 NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   password_reset_token TEXT UNIQUE NOT NULL,
   password_reset_expiration TIMESTAMP NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS scaladb.public.user_sessions (
+    id SERIAL PRIMARY KEY,
+    user_id int4 UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_session_token TEXT UNIQUE NOT NULL
 );
 
 -- Grant all privileges to user scala
