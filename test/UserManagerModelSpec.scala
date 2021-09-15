@@ -67,36 +67,37 @@ class UserManagerModelSpec() extends PlaySpec {
       the[SQLException] thrownBy await(userManagerModel.createUser("testUser", "", "test@mail.com"))
     }
 
-    "fail upon creation of user with wrongly formatted email field" in {
-      the[SQLException] thrownBy await(userManagerModel.createUser("newUser", "newPassword", "badlyformattedemail"))
-      the[SQLException] thrownBy await(userManagerModel.createUser("newUser", "newPassword", "badly@fasf"))
-      the[SQLException] thrownBy await(userManagerModel.createUser("newUser", "newPassword", "222@gm,com"))
-    }
+    // handled by the server not the database for now...
+//    "fail upon creation of user with wrongly formatted email field" in {
+//      the[SQLException] thrownBy await(userManagerModel.createUser("newUser", "newPassword", "badlyformattedemail"))
+//      the[SQLException] thrownBy await(userManagerModel.createUser("newUser", "newPassword", "badly@fasf"))
+//      the[SQLException] thrownBy await(userManagerModel.createUser("newUser", "newPassword", "222@gm,com"))
+//    }
   }
 
   "userManagerModel - user validation" must {
     "validate existing user with correct username and password" in {
-      await(userManagerModel.validateUser("testUser", "testPassword")) mustBe true
+      await(userManagerModel.validateUser("testUser", "testPassword")) must not equal None
     }
 
     "reject user with username that does not exist" in {
-      await(userManagerModel.validateUser("test", "admin")) mustBe false
+      await(userManagerModel.validateUser("test", "admin")) mustBe None
     }
 
     "reject user with correct username and wrong password" in {
-      await(userManagerModel.validateUser("testUser", "wrongPassword")) mustBe false
+      await(userManagerModel.validateUser("testUser", "wrongPassword")) mustBe None
     }
 
     "reject user incorrect username and password" in {
-      await(userManagerModel.validateUser("someUser", "wrongPassword")) mustBe false
+      await(userManagerModel.validateUser("someUser", "wrongPassword")) mustBe None
     }
 
     "reject user with empty username field" in {
-      await(userManagerModel.validateUser("", "wrongPassword")) mustBe false
+      await(userManagerModel.validateUser("", "wrongPassword")) mustBe None
     }
 
     "reject user empty password field" in {
-      await(userManagerModel.validateUser("someUser", "")) mustBe false
+      await(userManagerModel.validateUser("someUser", "")) mustBe None
     }
   }
 
