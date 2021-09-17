@@ -13,17 +13,36 @@ import javax.inject.Inject
 import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 
-// TODO: Ensure all database queries successfully complete (database could be down)
 class UserManagerModel @Inject()(dbConfigProvider: DatabaseConfigProvider)(implicit executionContext: ExecutionContext) extends DatabaseModel(dbConfigProvider) {
   private val secureRandom: SecureRandom = new SecureRandom()
   private val base64Encoder: Base64.Encoder = Base64.getUrlEncoder
+  private val passwordResetTokenBitSize = 88
+  private val userSessionTokenBitSize = 128
   private val passwordRequestExpirationDurationMinutes = 30
 
-  def validateUser(username: String, password: String): Future[Boolean] = {
-    val userFuture = getUserByUsername(username)
+  def validateUser(username: String, password: String): Future[Option[String]] = async {
+    val userOption = await(getUserByUsername(username))
+    var sessionTokenResult: Option[String] = Option.empty[String]
 
-    userFuture.map { user =>
-      user.nonEmpty && BCrypt.checkpw(password, user.get.password)
+    userOption match {
+      case Some(user) =>
+        val isPasswordValid = BCrypt.checkpw(password, user.password)
+
+        if (isPasswordValid) {
+          sessionTokenResult = await(getSessionTokenByUserId(user.id))
+
+          if(sessionTokenResult.isEmpty){
+            val newUserSessionToken = generateRandomToken(userSessionTokenBitSize)
+            val insertSessionTokenAction = UserSessions += UserSessionsRow(-1, user.id, newUserSessionToken)
+            val sessionTokenCreated = await(database.run(insertSessionTokenAction).map(isBiggerThanZero))
+
+            if (sessionTokenCreated)
+              sessionTokenResult = Some(newUserSessionToken)
+          }
+        }
+
+        sessionTokenResult
+      case None => None
     }
   }
 
@@ -32,16 +51,45 @@ class UserManagerModel @Inject()(dbConfigProvider: DatabaseConfigProvider)(impli
     val encryptedPassword: String = BCrypt.hashpw(password, BCrypt.gensalt())
 
     // passing negative 1 to automatically generate an id on the database
-    val userToAdd: UsersRow = UsersRow(-1, username, encryptedPassword, email)
+    val currentTimestamp = Some(new Timestamp(System.currentTimeMillis()))
+    val userToAdd: UsersRow = UsersRow(-1, username, encryptedPassword, email, currentTimestamp)
     val addUserQuery = (Users returning Users.map(_.id)) += userToAdd // or use Users.insertOrUpdate(userToAdd)
 
     // run the query by the database
     database.run(addUserQuery)
   }
 
-  private def generatePasswordResetToken(): String = {
-    val tokenSize = 11
-    val randomBytes: Array[Byte] = new Array[Byte](tokenSize)
+  def userHasSessionToken(userId: Int): Future[Boolean] = {
+    val userHasSessionAction = UserSessions.filter(_.userId === userId).result.headOption
+
+    database.run(userHasSessionAction).map(notEmpty)
+  }
+
+  def getUserIdBySessionToken(userSessionToken: String): Future[Option[Int]] = {
+    val getUserIdBySessionTokenAction = for {
+      userSession <- UserSessions if userSession.userSessionToken === userSessionToken
+    } yield userSession.userId
+
+    database.run(getUserIdBySessionTokenAction.result.headOption)
+  }
+
+  def getSessionTokenByUserId(userId: Int): Future[Option[String]] = {
+    val getSessionTokenByUserIdAction = for {
+      userSession <- UserSessions if userSession.userId === userId
+    } yield userSession.userSessionToken
+
+    database.run(getSessionTokenByUserIdAction.result.headOption)
+  }
+
+  def deleteUserSession(userId: Int): Future[Boolean] = {
+    val deleteUserSessionAction = UserSessions.filter(_.userId===userId).delete
+
+    database.run(deleteUserSessionAction).map(isBiggerThanZero)
+  }
+
+  private def generateRandomToken(bitSize: Int): String = {
+    val byteSize: Int = bitSize / 8
+    val randomBytes: Array[Byte] = new Array[Byte](byteSize)
 
     secureRandom.nextBytes(randomBytes)
     base64Encoder.encodeToString(randomBytes)
@@ -52,7 +100,7 @@ class UserManagerModel @Inject()(dbConfigProvider: DatabaseConfigProvider)(impli
 
     userOption match {
       case Some(user) =>
-        val passwordResetToken = generatePasswordResetToken()
+        val passwordResetToken = generateRandomToken(passwordResetTokenBitSize)
         val passwordTokenCreated = await(insertPasswordTokenForUser(user.id, passwordResetToken))
 
         if (!passwordTokenCreated) {
@@ -91,7 +139,7 @@ class UserManagerModel @Inject()(dbConfigProvider: DatabaseConfigProvider)(impli
   }
 
   def updatePasswordWithPasswordResetToken(passwordResetToken: String, newPassword: String): Future[Boolean] = async {
-    if(newPassword.isEmpty){
+    if (newPassword.isEmpty) {
       throw new SQLException(s"[updatePasswordWithPasswordResetToken]: empty password field")
     }
 
@@ -102,7 +150,7 @@ class UserManagerModel @Inject()(dbConfigProvider: DatabaseConfigProvider)(impli
       val userLinkedToTokenOption = await(getUserByPasswordToken(passwordResetToken))
 
       // user must exist at this point since token is valid and user_id field is not null
-      if(userLinkedToTokenOption.nonEmpty){
+      if (userLinkedToTokenOption.nonEmpty) {
         passwordUpdated = await(updatePasswordForUser(userLinkedToTokenOption.get.id, newPassword))
 
         if (passwordUpdated) {
@@ -112,7 +160,7 @@ class UserManagerModel @Inject()(dbConfigProvider: DatabaseConfigProvider)(impli
         }
       }
     }
-    else{
+    else {
       throw new SQLException(s"[updatePasswordWithPasswordResetToken]: passwordResetToken $passwordResetToken is invalid")
     }
 

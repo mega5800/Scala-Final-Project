@@ -5,7 +5,7 @@ lazy val `test` = (project in file(".")).enablePlugins(PlayScala)
 scalaVersion := "2.13.5"
 resolvers += "Akka Snapshot Repository" at "https://repo.akka.io/snapshots/"
 libraryDependencies ++= Seq(
-    //  jdbc,
+      jdbc,
     // ehcache ,
     // ws ,
     guice,

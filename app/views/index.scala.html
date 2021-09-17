@@ -1,14 +1,49 @@
-@(items: Seq[String])
+@import java.time.format.DateTimeFormatter
+@(userItemCosts: Seq[Tables#UserItemCostsRow])(implicit request: RequestHeader, flash: Flash)
 
 @main("Home page") {
-    <ul>
-        @for(item <- items) {
-        
-            <li>@item</li>
-        }
-    </ul>
+    <h1>Your detailed costs</h1>
 
-    <form action="@routes.UserController.logout">
-        <input type="submit" value="Logout">
-    </form>
+    <span>@flash.get("message")</span>
+    <div class="user-cost-details">
+        @if(userItemCosts.nonEmpty){
+            <table>
+                <tr>
+                    <th>Item Name</th>
+                    <th>Purchase Date</th>
+                    <th>Category</th>
+                    <th>Item Price</th>
+                </tr>
+
+
+            @for(itemCost <- userItemCosts){
+                <tr>
+                    <td>@{itemCost.itemName}</td>
+                    <td>@{itemCost.purchaseDate.toLocalDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))}</td>
+                    <td>@{itemCost.category}</td>
+                    <td>@{itemCost.itemPrice.toString}</td>
+                    <td>
+                        <form method="post" action="@routes.CostController.deleteItemCost()">
+                            @helper.CSRF.formField
+                            <input type="hidden" name="deleteItem" value="@{itemCost.itemId}">
+                            <input type="submit" value="Delete item">
+                        </form>
+                    </td>
+                </tr>
+            }
+
+            </table>
+        } else{
+            <div>No details to display :(</div>
+        }
+
+    </div>
+
+    <a href="@routes.CostController.addItemCostPage()">Add costs</a>
+
+    <div style="position:absolute; top: 0; right: 0" class="logout">
+        <form action="@routes.UserController.logout">
+            <input type="submit" value="Logout">
+        </form>
+    </div>
 }

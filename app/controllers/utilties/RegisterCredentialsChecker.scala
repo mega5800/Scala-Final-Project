@@ -1,6 +1,6 @@
-package controllers
+package controllers.utilties
 
-import controllers.CredentialsValidityStates.CredentialsValidityStates
+import controllers.utilties.CredentialsValidityStates.CredentialsValidityStates
 
 class RegisterCredentialsChecker(private var userName:String="", private var password:String="", private var email:String="")
 {

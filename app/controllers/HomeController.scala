@@ -1,31 +1,33 @@
 package controllers
 
+import controllers.actions.{AuthenticatedAction, NonAuthenticatedAction}
+import controllers.utilties.{Attributes, FutureResultHandler, FutureSuccess}
+import models.CostsManagerModel
+import play.api.libs.concurrent.Futures
 import play.api.mvc._
+
+import java.time.format.DateTimeFormatter
 import javax.inject._
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
-  val items: Seq[String] = (1 to 10).map(num => s"Item$num").toList
+class HomeController @Inject()(authenticatedAction: AuthenticatedAction, nonAuthenticatedAction: NonAuthenticatedAction, costsManagerModel: CostsManagerModel, cc: ControllerComponents)(implicit executionContext: ExecutionContext, futures: Futures) extends AbstractController(cc) {
+  def index: Action[AnyContent] = authenticatedAction.async { implicit request =>
+    val userId = request.attrs(Attributes.UserID)
+    val handler = FutureResultHandler(costsManagerModel.getAllCostsForUser(userId))
 
-  def index: Action[AnyContent] = Action { request =>
-    val usernameSession = request.session.get("username")
-    usernameSession.map { username =>
-      // TODO: grab username costs and send them to index
-      Ok(views.html.index(items))
-    }.getOrElse(Redirect(routes.HomeController.loginPage))
+    handler.handle {
+      case FutureSuccess(userItemCosts) => Future.successful(Ok(views.html.index(userItemCosts)))
+    }
   }
 
-  def loginPage: Action[AnyContent] = Action { implicit request =>
-    val usernameSession = request.session.get("username")
-    usernameSession.map { username =>
-      Redirect(routes.HomeController.index)  
-      }.getOrElse(Ok(views.html.login()))
+  def loginPage: Action[AnyContent] = nonAuthenticatedAction { implicit request =>
+    Ok(views.html.login())
   }
 
-  def registerPage: Action[AnyContent] = Action { implicit request =>
-    val usernameSession = request.session.get("username")
-    usernameSession.map { _ =>
-      Redirect(routes.HomeController.index)  
-    }.getOrElse(Ok(views.html.register()))
+  def registerPage: Action[AnyContent] = nonAuthenticatedAction { implicit request =>
+    Ok(views.html.register())
   }
 }
+
+

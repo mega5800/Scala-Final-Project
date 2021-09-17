@@ -1,0 +1,31 @@
+@()(implicit requestHeader: RequestHeader, flash: Flash)
+
+@main("Add cost") {
+    <form method= "post" action="@routes.CostController.addItemCost()">
+        @helper.CSRF.formField
+
+        <label for="itemName">Item name: </label>
+        <input type="text" name="itemName" id="itemName">
+        <br>
+
+        <label for="purchaseDate">Purchase date: </label>
+        <input type="datetime-local" name="purchaseDate" id="purchaseDate">
+        <br>
+
+        <label for="category">Category: </label>
+        <select name="category" id="category">
+            @for(category <- Categories.values.unsorted){
+                <option value=@{category.toString}>@{category.toString}</option>
+            }
+        </select>
+        <br>
+
+        <label for="itemPrice">Item price: </label>
+        <input type="number"  name="itemPrice" id="itemPrice" min="0.00" step="0.01" />
+        <br>
+
+        <input type="submit" value="Add cost">
+    </form>
+
+    <div><span>@flash.get("message")</span></div>
+}

@@ -1,102 +1,115 @@
 import models._
 import org.mindrot.jbcrypt.BCrypt
-import org.scalatest.time.Span
-import org.scalatest.time.SpanSugar.convertIntToGrainOfTime
-import org.scalatestplus.play.PlaySpec
-import play.api.Mode
-import play.api.db.slick.DatabaseConfigProvider
-import play.api.inject.Injector
-import play.api.inject.guice.GuiceApplicationBuilder
 
-import java.sql
 import java.sql.SQLException
-import scala.concurrent.{Await, Awaitable, ExecutionContext, Future}
 
-class UserManagerModelSpec() extends PlaySpec {
-  lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder().in(Mode.Test)
-  lazy val injector: Injector = appBuilder.injector()
-  lazy val dbConfProvider: DatabaseConfigProvider = injector.instanceOf[DatabaseConfigProvider]
-  lazy val executionContext: ExecutionContext = injector.instanceOf[ExecutionContext]
-  private val queryTime: Span = 2.seconds
+class UserManagerModelSpec() extends DatabaseModelSpec {
+  private val userManagerModel = new UserManagerModel(dbConfProvider)
 
-  val userManagerModel = new UserManagerModel(dbConfProvider)(executionContext)
+  private var testUserId: Int = -1
+  private val testUserUsername = "testUser"
+  private val testUserPassword = "testPassword"
+  private val testUserEmail = "test@mail.com"
 
   "UserManagerModel - user creation" must {
-    var userId: Int = -1
     "create new user with username and email that does not exist" in {
       noException should be thrownBy {
-        userId = await(userManagerModel.createUser("testUser", "testPassword", "test@mail.com"))
+        testUserId = await(userManagerModel.createUser(testUserUsername, testUserPassword, testUserEmail))
       }
 
     }
 
     "new user must exist in database" in {
-      await(userManagerModel.userExists("testUser")) mustBe true
+      await(userManagerModel.userExists(testUserUsername)) mustBe true
     }
 
     "new user must have the same values given when registered" in {
-      val user = await(userManagerModel.getUserByUsername("testUser")).get
+      val user = await(userManagerModel.getUserByUsername(testUserUsername)).get
 
-      user.id mustBe userId
-      BCrypt.checkpw("testPassword", user.password) mustBe true
-      user.username mustBe "testUser"
-      user.email mustBe "test@mail.com"
+      user.id mustBe testUserId
+      BCrypt.checkpw(testUserPassword, user.password) mustBe true
+      user.username mustBe testUserUsername
+      user.email mustBe testUserEmail
+      assert ((System.currentTimeMillis() - user.createdAt.get.getTime) <= 1000)
     }
 
     "fail upon creation of user with existing username" in {
-      the[SQLException] thrownBy await(userManagerModel.createUser("testUser", "pass", "test2@mail.com"))
+      the[SQLException] thrownBy await(userManagerModel.createUser(testUserUsername, "pass", "test2@mail.com"))
     }
 
     "fail upon creation of user with existing email" in {
-      the[SQLException] thrownBy await(userManagerModel.createUser("testUser2", "testPassword", "test@mail.com"))
+      the[SQLException] thrownBy await(userManagerModel.createUser("testUser2", testUserPassword, testUserEmail))
     }
 
     "fail upon creation of user with existing email and username" in {
-      the[SQLException] thrownBy await(userManagerModel.createUser("testUser", "testPassword", "test@mail.com"))
+      the[SQLException] thrownBy await(userManagerModel.createUser(testUserUsername, testUserPassword, testUserEmail))
     }
 
     "fail upon creation of user with empty username field" in {
-      the[SQLException] thrownBy await(userManagerModel.createUser("", "testPassword", "test@mail.com"))
+      the[SQLException] thrownBy await(userManagerModel.createUser("", testUserPassword, testUserEmail))
     }
 
     "fail upon creation of user with empty email field" in {
-      the[SQLException] thrownBy await(userManagerModel.createUser("testUser", "testPassword", ""))
+      the[SQLException] thrownBy await(userManagerModel.createUser(testUserUsername, testUserPassword, ""))
     }
 
     "fail upon creation of user with empty password field" in {
-      the[SQLException] thrownBy await(userManagerModel.createUser("testUser", "", "test@mail.com"))
+      the[SQLException] thrownBy await(userManagerModel.createUser(testUserUsername, "", testUserEmail))
     }
 
-    "fail upon creation of user with wrongly formatted email field" in {
-      the[SQLException] thrownBy await(userManagerModel.createUser("newUser", "newPassword", "badlyformattedemail"))
-      the[SQLException] thrownBy await(userManagerModel.createUser("newUser", "newPassword", "badly@fasf"))
-      the[SQLException] thrownBy await(userManagerModel.createUser("newUser", "newPassword", "222@gm,com"))
-    }
+    // handled by the server not the database for now...
+//    "fail upon creation of user with wrongly formatted email field" in {
+//      the[SQLException] thrownBy await(userManagerModel.createUser("newUser", "newPassword", "badlyformattedemail"))
+//      the[SQLException] thrownBy await(userManagerModel.createUser("newUser", "newPassword", "badly@fasf"))
+//      the[SQLException] thrownBy await(userManagerModel.createUser("newUser", "newPassword", "222@gm,com"))
+//    }
   }
 
   "userManagerModel - user validation" must {
+    var sessionToken: Option[String] = Option.empty[String]
     "validate existing user with correct username and password" in {
-      await(userManagerModel.validateUser("testUser", "testPassword")) mustBe true
+      sessionToken = await(userManagerModel.validateUser(testUserUsername, testUserPassword))
+
+      sessionToken must not equal None
+    }
+
+    "have the token exist for logged in user after validation" in {
+      await(userManagerModel.userHasSessionToken(testUserId)) mustBe true
+    }
+
+    "have the user id of testUser connected to obtained session token during login" in {
+      await(userManagerModel.getUserIdBySessionToken(sessionToken.get)) mustBe Some(testUserId)
+    }
+
+    "have the session token created for testUser connected to the user id of testUser" in {
+      await(userManagerModel.getSessionTokenByUserId(testUserId)) mustBe sessionToken
+    }
+
+    "delete the session token that's connected to testUser successfully" in {
+      await(userManagerModel.deleteUserSession(testUserId)) mustBe true
+      await(userManagerModel.userHasSessionToken(testUserId)) mustBe false
+      await(userManagerModel.getSessionTokenByUserId(testUserId)) mustBe None
+      await(userManagerModel.getUserIdBySessionToken(sessionToken.get)) mustBe None
     }
 
     "reject user with username that does not exist" in {
-      await(userManagerModel.validateUser("test", "admin")) mustBe false
+      await(userManagerModel.validateUser("test", "admin")) mustBe None
     }
 
     "reject user with correct username and wrong password" in {
-      await(userManagerModel.validateUser("testUser", "wrongPassword")) mustBe false
+      await(userManagerModel.validateUser(testUserUsername, "wrongPassword")) mustBe None
     }
 
     "reject user incorrect username and password" in {
-      await(userManagerModel.validateUser("someUser", "wrongPassword")) mustBe false
+      await(userManagerModel.validateUser("someUser", "wrongPassword")) mustBe None
     }
 
     "reject user with empty username field" in {
-      await(userManagerModel.validateUser("", "wrongPassword")) mustBe false
+      await(userManagerModel.validateUser("", "wrongPassword")) mustBe None
     }
 
     "reject user empty password field" in {
-      await(userManagerModel.validateUser("someUser", "")) mustBe false
+      await(userManagerModel.validateUser("someUser", "")) mustBe None
     }
   }
 
@@ -152,7 +165,7 @@ class UserManagerModelSpec() extends PlaySpec {
     var passwordResetToken: String = ""
     "create password token for email that exists in the database" in {
       noException should be thrownBy {
-        passwordResetToken = await(userManagerModel.createPasswordResetToken("test@mail.com"))
+        passwordResetToken = await(userManagerModel.createPasswordResetToken(testUserEmail))
       }
     }
 
@@ -200,15 +213,11 @@ class UserManagerModelSpec() extends PlaySpec {
 
   "UserManagerModel - test clean up" must {
     "delete created users from database" in {
-      await(cleanUp()) mustBe true
+      cleanUp()
     }
   }
 
-  private def await[DataType](awaitable: Awaitable[DataType]): DataType = {
-    Await.result(awaitable, queryTime)
-  }
-
-  private def cleanUp[T](): Future[Boolean] = {
-    userManagerModel.deleteUserByUsername("testUser")
+  override def cleanUp(): Unit = {
+    await(userManagerModel.deleteUserByUsername(testUserUsername))
   }
 }

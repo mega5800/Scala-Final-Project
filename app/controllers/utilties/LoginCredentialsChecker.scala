@@ -1,6 +1,6 @@
-package controllers
+package controllers.utilties
 
-import controllers.CredentialsValidityStates.CredentialsValidityStates
+import controllers.utilties.CredentialsValidityStates.CredentialsValidityStates
 
 class LoginCredentialsChecker(private var userName:String="", private var password:String="")
 {
