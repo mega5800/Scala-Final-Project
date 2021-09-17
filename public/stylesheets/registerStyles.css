@@ -78,7 +78,7 @@ body
     margin-left: 50px;
 }
 
-.register-button-grid > input
+.register-button-grid > input,a
 {
     cursor: pointer;
     font-size: 2rem;
