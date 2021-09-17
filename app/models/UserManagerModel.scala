@@ -17,7 +17,7 @@ class UserManagerModel @Inject()(dbConfigProvider: DatabaseConfigProvider)(impli
   private val secureRandom: SecureRandom = new SecureRandom()
   private val base64Encoder: Base64.Encoder = Base64.getUrlEncoder
   private val passwordResetTokenBitSize = 88
-  private val userSessionTokenBitSize = 512
+  private val userSessionTokenBitSize = 128
   private val passwordRequestExpirationDurationMinutes = 30
 
   def validateUser(username: String, password: String): Future[Option[String]] = async {

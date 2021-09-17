@@ -16,7 +16,7 @@ object FutureResultHandler {
   }
 }
 
-class FutureResultHandler[+T](private val future: Future[T]) {
+class FutureResultHandler[T](private val future: Future[T]) {
   private val oopsMessage: String = "Oops, something went wrong!"
   private val maximumTimeout: FiniteDuration = 3.seconds
 
@@ -26,7 +26,7 @@ class FutureResultHandler[+T](private val future: Future[T]) {
         case Success(value) => futureStatusFunction(FutureSuccess(value))
         case Failure(exception) =>
           println(exception.getMessage)
-          val futureFailure = FutureFailure(exception)
+          val futureFailure = FutureFailure[T](exception)
 
           if(futureStatusFunction.isDefinedAt(futureFailure)){
             try{
@@ -45,6 +45,6 @@ class FutureResultHandler[+T](private val future: Future[T]) {
   }
 }
 
-sealed abstract class FutureStatus[+T]
-final case class FutureSuccess[+T](value: T) extends FutureStatus[T]
-final case class FutureFailure[+T](exception: Throwable) extends FutureStatus[T]
+sealed abstract class FutureStatus[T]
+final case class FutureSuccess[T](value: T) extends FutureStatus[T]
+final case class FutureFailure[T](exception: Throwable) extends FutureStatus[T]
