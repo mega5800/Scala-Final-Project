@@ -1,16 +1,7 @@
 import models._
 import org.mindrot.jbcrypt.BCrypt
-import org.scalatest.time.Span
-import org.scalatest.time.SpanSugar.convertIntToGrainOfTime
-import org.scalatestplus.play.PlaySpec
-import play.api.Mode
-import play.api.db.slick.DatabaseConfigProvider
-import play.api.inject.Injector
-import play.api.inject.guice.GuiceApplicationBuilder
 
-import java.sql
 import java.sql.SQLException
-import scala.concurrent.{Await, Awaitable, ExecutionContext, Future}
 
 class UserManagerModelSpec() extends DatabaseModelSpec {
   private val userManagerModel = new UserManagerModel(dbConfProvider)

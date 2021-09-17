@@ -4,18 +4,21 @@
 # ~~~~
 
 # An example controller showing a sample home page
-GET     /                           controllers.HomeController.index
-GET     /login                      controllers.HomeController.loginPage
-GET     /register                   controllers.HomeController.registerPage
-GET     /logout                     controllers.UserController.logout
-POST    /createUser                 controllers.UserController.createUser
-POST    /validateUser               controllers.UserController.validateUser
-GET     /forgotPassword             controllers.UserController.forgotPasswordPage
-GET     /passwordReset              controllers.UserController.passwordResetPage(token)
-POST    /requestPasswordReset       controllers.UserController.requestPasswordReset
-POST    /resetPassword              controllers.UserController.resetPassword
+GET         /                            controllers.HomeController.index
+GET         /login                       controllers.HomeController.loginPage
+GET         /register                    controllers.HomeController.registerPage
+GET         /logout                      controllers.UserController.logout
+POST        /createUser                  controllers.UserController.createUser
+POST        /validateUser                controllers.UserController.validateUser
+GET         /forgotPassword              controllers.UserController.forgotPasswordPage
+GET         /passwordReset               controllers.UserController.passwordResetPage(token)
+POST        /requestPasswordReset        controllers.UserController.requestPasswordReset
+POST        /resetPassword               controllers.UserController.resetPassword
+GET         /addItemCost                 controllers.CostController.addItemCostPage()
+POST        /addItemCost                 controllers.CostController.addItemCost()
+POST        /deleteItemCost              controllers.CostController.deleteItemCost()
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+GET         /assets/*file                controllers.Assets.versioned(path="/public", file: Asset)
 
       

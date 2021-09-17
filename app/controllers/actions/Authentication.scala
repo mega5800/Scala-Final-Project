@@ -1,9 +1,8 @@
 package controllers.actions
 
-import controllers.utilties.Attributes
 import models.UserManagerModel
-import play.api.libs.typedmap.TypedKey
 import play.api.mvc.{RequestHeader, Result}
+
 import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -22,9 +21,6 @@ object Authentication {
   }
 }
 
-abstract class Authentication
-
+trait Authentication
 final case class AuthenticationSuccess(userId: Int) extends Authentication
-
 final case class AuthenticationFailure() extends Authentication
-

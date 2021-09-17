@@ -1,42 +1,49 @@
-@(costs: Seq[Tables#UserCostsRow])
+@import java.time.format.DateTimeFormatter
+@(userItemCosts: Seq[Tables#UserItemCostsRow])(implicit request: RequestHeader, flash: Flash)
 
 @main("Home page") {
     <h1>Your detailed costs</h1>
 
+    <span>@flash.get("message")</span>
     <div class="user-cost-details">
-    @{
-        if(costs.nonEmpty){
+        @if(userItemCosts.nonEmpty){
             <table>
                 <tr>
-                    <th>Name</th>
+                    <th>Item Name</th>
                     <th>Purchase Date</th>
                     <th>Category</th>
-                    <th>Price</th>
+                    <th>Item Price</th>
                 </tr>
 
 
-            {for(cost <- costs)
+            @for(itemCost <- userItemCosts){
                 <tr>
-                    <td>@{cost.name}</td>
-                    <td>@{cost.purchaseDate.toString}</td>
-                    <td>@{cost.category}</td>
-                    <td>@{cost.costPrice.toString}</td>
+                    <td>@{itemCost.itemName}</td>
+                    <td>@{itemCost.purchaseDate.toLocalDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))}</td>
+                    <td>@{itemCost.category}</td>
+                    <td>@{itemCost.itemPrice.toString}</td>
+                    <td>
+                        <form method="post" action="@routes.CostController.deleteItemCost()">
+                            @helper.CSRF.formField
+                            <input type="hidden" name="deleteItem" value="@{itemCost.itemId}">
+                            <input type="submit" value="Delete item">
+                        </form>
+                    </td>
                 </tr>
             }
-            </table>
 
-        }
-        else{
+            </table>
+        } else{
             <div>No details to display :(</div>
         }
-    }
+
     </div>
 
+    <a href="@routes.CostController.addItemCostPage()">Add costs</a>
 
-
-
-
-    <form action="@routes.UserController.logout">
-        <input type="submit" value="Logout">
-    </form>
+    <div style="position:absolute; top: 0; right: 0" class="logout">
+        <form action="@routes.UserController.logout">
+            <input type="submit" value="Logout">
+        </form>
+    </div>
 }

@@ -13,15 +13,15 @@ CREATE TABLE IF NOT EXISTS scaladb.public.users
     created_at TIMESTAMP default CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS scaladb.public.user_costs (
-    cost_id int4 NOT NULL,
+CREATE TABLE IF NOT EXISTS scaladb.public.user_item_costs (
+    item_id int4 NOT NULL,
     user_id int4 NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
+    item_name TEXT NOT NULL,
     purchase_date TIMESTAMP NOT NULL,
     category TEXT NOT NULL,
-    cost_price NUMERIC NOT NULL,
---  super key that requires both user_id and cost_id to identify a row
-    PRIMARY KEY(user_id, cost_id)
+    item_price NUMERIC NOT NULL,
+--  super key that requires both user_id and item_id to identify a row
+    PRIMARY KEY(user_id, item_id)
 );
 
 CREATE TABLE IF NOT EXISTS scaladb.public.password_requests (
@@ -40,9 +40,9 @@ CREATE TABLE IF NOT EXISTS scaladb.public.user_sessions (
 CREATE OR REPLACE FUNCTION secondary_id_autoincrement() RETURNS trigger AS
 '
 BEGIN
-    NEW.cost_id = COALESCE((
-      SELECT max(cost_id) + 1
-      FROM user_costs
+    NEW.item_id = COALESCE((
+      SELECT max(item_id) + 1
+      FROM user_item_costs
       WHERE user_id = NEW.user_id
       ), 1);
 RETURN NEW;
@@ -50,8 +50,8 @@ END;
 '
 LANGUAGE plpgsql;
 
-CREATE TRIGGER user_costs_trigger
-    BEFORE INSERT ON user_costs
+CREATE TRIGGER user_item_costs_trigger
+    BEFORE INSERT ON user_item_costs
     FOR EACH ROW EXECUTE PROCEDURE secondary_id_autoincrement();
 
 -- Grant all privileges to user scala

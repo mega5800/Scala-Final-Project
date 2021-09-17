@@ -12,7 +12,7 @@ import scala.util.{Failure, Success}
 
 object FutureResultHandler {
   def apply[T](future: Future[T]): FutureResultHandler[T] = {
-    new FutureResultHandler[T](future)
+    new FutureResultHandler(future)
   }
 }
 
@@ -45,6 +45,6 @@ class FutureResultHandler[T](private val future: Future[T]) {
   }
 }
 
-sealed abstract class FutureStatus[T]
+sealed trait FutureStatus[T]
 final case class FutureSuccess[T](value: T) extends FutureStatus[T]
 final case class FutureFailure[T](exception: Throwable) extends FutureStatus[T]

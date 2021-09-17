@@ -26,8 +26,7 @@ class UserController @Inject()(authenticatedAction: AuthenticatedAction, nonAuth
     handler.handle {
       case FutureSuccess(_) => Future.successful(Redirect(routes.HomeController.loginPage))
       case FutureFailure(exception) => exception match {
-        case sqlException: SQLException =>
-          println(sqlException)
+        case _: SQLException =>
           Future.successful(Redirect(routes.HomeController.registerPage).flashing("error" -> "Failed to create user"))
       }
     }
@@ -101,6 +100,7 @@ class UserController @Inject()(authenticatedAction: AuthenticatedAction, nonAuth
     }
   }
 
+  // TODO: validate email input field
   def requestPasswordReset: Action[AnyContent] = nonAuthenticatedAction.async { implicit request =>
     val email = request.body.asFormUrlEncoded.get("email").head
 
@@ -117,13 +117,13 @@ class UserController @Inject()(authenticatedAction: AuthenticatedAction, nonAuth
         mailerService.sendSimpleEmail(emailTo = email, subject = "ScalaProject - Password reset link", content = passwordResetLink)
         Future.successful(Redirect(routes.UserController.forgotPasswordPage).flashing("message" -> "Your request has been sent, if your email is in your systems you will receive an email shortly."))
       case FutureFailure(exception) => exception match {
-        case sqlException: SQLException =>
-          println(sqlException)
+        case _: SQLException =>
           Future.successful(Redirect(routes.UserController.forgotPasswordPage).flashing("message" -> "There is a problem, please try again later."))
       }
     }
   }
 
+  // TODO: validate input fields newPassword and confirmPassword
   def resetPassword: Action[AnyContent] = nonAuthenticatedAction.async { request =>
     val passwordResetData = request.body.asFormUrlEncoded.get
     val newPassword = passwordResetData("newPassword").head
@@ -140,6 +140,7 @@ class UserController @Inject()(authenticatedAction: AuthenticatedAction, nonAuth
 
   private def getResultForPasswordReset(passwordResetToken: String, newPassword: String): Future[Result] = {
     val handler = FutureResultHandler(userManagerModel.updatePasswordWithPasswordResetToken(passwordResetToken, newPassword))
+
     handler.handle {
       case FutureSuccess(passwordChanged) =>
         if (passwordChanged) {
@@ -149,8 +150,7 @@ class UserController @Inject()(authenticatedAction: AuthenticatedAction, nonAuth
           Future.successful(Redirect(routes.UserController.passwordResetPage(passwordResetToken)).flashing("message" -> "There was a problem, please try again later."))
         }
       case FutureFailure(exception) => exception match {
-        case sqlException: SQLException =>
-          println(sqlException)
+        case _: SQLException =>
           Future.successful(Redirect(routes.UserController.forgotPasswordPage).flashing("message" -> "There is a problem, please try again later."))
       }
     }

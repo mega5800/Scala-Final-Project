@@ -1,6 +1,6 @@
 package models
 
-import models.Tables.{UserCosts, UserCostsRow, Users}
+import models.Tables.{UserItemCosts, UserItemCostsRow}
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.PostgresProfile.api._
 
@@ -9,42 +9,48 @@ import scala.concurrent.{ExecutionContext, Future}
 
 
 class CostsManagerModel @Inject()(dbConfigProvider: DatabaseConfigProvider)(implicit executionContext: ExecutionContext) extends DatabaseModel(dbConfigProvider) {
-  def getCostsForUser(userId: Int): Future[Seq[UserCostsRow]] = {
-    val getCostsForUserQuery = UserCosts.filter(_.userId === userId)
+  def getAllCostsForUser(userId: Int): Future[Seq[UserItemCostsRow]] = {
+    val getCostsForUserQuery = UserItemCosts.filter(_.userId === userId)
 
     database.run(getCostsForUserQuery.result)
   }
 
-  def getCostForUser(userId: Int, costId: Int): Future[Option[UserCostsRow]] = {
-      val getCostForUserAction = UserCosts.filter(cost => cost.userId === userId && cost.costId === costId).result.headOption
+  def getSingleCostForUser(userId: Int, itemId: Int): Future[Option[UserItemCostsRow]] = {
+      val getCostForUserAction = UserItemCosts.filter(cost => cost.userId === userId && cost.itemId === itemId).result.headOption
 
       database.run(getCostForUserAction)
   }
 
-  def addSingleCostForUser(costToAdd: UserCostsRow): Future[Boolean] = {
-    val addSingleCostForUserAction = UserCosts += costToAdd
+  def addSingleCostForUser(costToAdd: UserItemCostsRow): Future[Int] = {
+    val addSingleCostForUserAction = (UserItemCosts returning UserItemCosts.map(_.itemId)) += costToAdd
 
-    database.run(addSingleCostForUserAction).map(isBiggerThanZero)
+    database.run(addSingleCostForUserAction)
   }
 
-  def updateCostForUser(updatedCost: UserCostsRow): Future[Boolean] = {
-    database.run(UserCosts.update(updatedCost)).map(isBiggerThanZero)
+  def updateCostForUser(updatedCost: UserItemCostsRow): Future[Boolean] = {
+    val updateCostForUserQuery = for {
+      cost <- UserItemCosts if cost.userId === updatedCost.userId && cost.itemId === updatedCost.itemId
+    } yield (cost.itemName, cost.purchaseDate, cost.category, cost.itemPrice)
+
+    val updateCostForUserAction = updateCostForUserQuery.update((updatedCost.itemName, updatedCost.purchaseDate, updatedCost.category, updatedCost.itemPrice))
+
+    database.run(updateCostForUserAction).map(isBiggerThanZero)
   }
 
-  def deleteCostForUser(userId: Int, costId: Int): Future[Boolean] = {
-    val deleteCostForUserAction = UserCosts.filter(cost => cost.userId === userId && cost.costId === costId).delete
+  def deleteCostForUser(userId: Int, itemId: Int): Future[Boolean] = {
+    val deleteCostForUserAction = UserItemCosts.filter(cost => cost.userId === userId && cost.itemId === itemId).delete
 
     database.run(deleteCostForUserAction).map(isBiggerThanZero)
   }
 
   def deleteAllCostsForUser(userId: Int): Future[Boolean] = {
-    val deleteAllCostForUser = UserCosts.filter(_.userId === userId).delete
+    val deleteAllCostForUser = UserItemCosts.filter(_.userId === userId).delete
 
     database.run(deleteAllCostForUser).map(isBiggerThanZero)
   }
 
-  def addCostsForUser(costsToAdd: Seq[UserCostsRow]): Future[Boolean] = {
-    val addCostsForUserAction = UserCosts ++= costsToAdd
+  def addCostsForUser(costsToAdd: Seq[UserItemCostsRow]): Future[Boolean] = {
+    val addCostsForUserAction = UserItemCosts ++= costsToAdd
 
     database.run(addCostsForUserAction).map(insertCount => {
       println("Bulk add count(?): " + insertCount.get)

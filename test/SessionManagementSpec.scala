@@ -1,14 +1,5 @@
-import org.scalatestplus.play.{HtmlUnitFactory, OneBrowserPerSuite, PlaySpec}
-import controllers.HomeController
-import controllers.actions.{AuthenticatedAction, NonAuthenticatedAction}
-import models.CostsManagerModel
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.test.{FakeRequest, Helpers}
-import play.api.test.Helpers.baseApplicationBuilder.injector
-import play.api.libs.concurrent.Futures
-import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout}
-
-import scala.concurrent.ExecutionContext
+import org.scalatestplus.play.{HtmlUnitFactory, OneBrowserPerSuite, PlaySpec}
 
 class SessionManagementSpec extends PlaySpec with GuiceOneServerPerSuite with OneBrowserPerSuite with HtmlUnitFactory{
   val testUsername = "testUsername"
@@ -39,7 +30,7 @@ class SessionManagementSpec extends PlaySpec with GuiceOneServerPerSuite with On
       }
     }
 
-    "not be able to create another user with the same credentials provided" in {
+   "not be able to create another user with the same credentials provided" in {
       go to registerPageUrl
 
       pageTitle mustBe "Register page"
@@ -51,6 +42,22 @@ class SessionManagementSpec extends PlaySpec with GuiceOneServerPerSuite with On
         val errorMessage = find(cssSelector("div span"))
         errorMessage.nonEmpty mustBe true
         errorMessage.get.text mustBe "Failed to create user"
+      }
+    }
+
+    "fail upon trying to log in with wrong username or password" in {
+      go to loginPageUrl
+      pageTitle mustBe "Login page"
+
+      fillLoginPageFormAndSubmit("wrongUsername", "somePassword")
+
+      eventually {
+        pageTitle mustBe "Login page"
+
+        val errorMessage = find(cssSelector("div span"))
+
+        errorMessage.nonEmpty mustBe true
+        errorMessage.get.text mustBe "Wrong username or password"
       }
     }
 
@@ -76,6 +83,20 @@ class SessionManagementSpec extends PlaySpec with GuiceOneServerPerSuite with On
         emptyCostsDetails.nonEmpty mustBe true
         emptyCostsDetails.get.text mustBe "No details to display :("
       }
+    }
+
+    "be redirected to index when trying to go to register page" in {
+      go to registerPageUrl
+
+      pageTitle mustBe "Home page"
+      currentUrl mustBe indexPageUrl
+    }
+
+    "be redirected to index when trying to go to login page" in {
+      go to loginPageUrl
+
+      pageTitle mustBe "Home page"
+      currentUrl mustBe indexPageUrl
     }
   }
 

@@ -14,7 +14,7 @@ trait Tables {
   import slick.jdbc.{GetResult => GR}
 
   /** DDL for all tables. Call .create to execute. */
-  lazy val schema: profile.SchemaDescription = PasswordRequests.schema ++ UserCosts.schema ++ Users.schema ++ UserSessions.schema
+  lazy val schema: profile.SchemaDescription = PasswordRequests.schema ++ UserItemCosts.schema ++ Users.schema ++ UserSessions.schema
   @deprecated("Use .schema instead of .ddl", "3.0")
   def ddl = schema
 
@@ -53,46 +53,46 @@ trait Tables {
   /** Collection-like TableQuery object for table PasswordRequests */
   lazy val PasswordRequests = new TableQuery(tag => new PasswordRequests(tag))
 
-  /** Entity class storing rows of table UserCosts
-   *  @param costId Database column cost_id SqlType(int4)
+  /** Entity class storing rows of table UserItemCosts
+   *  @param itemId Database column item_id SqlType(int4)
    *  @param userId Database column user_id SqlType(int4)
-   *  @param name Database column name SqlType(text)
+   *  @param itemName Database column item_name SqlType(text)
    *  @param purchaseDate Database column purchase_date SqlType(timestamp)
    *  @param category Database column category SqlType(text)
-   *  @param costPrice Database column cost_price SqlType(numeric) */
-  case class UserCostsRow(costId: Int, userId: Int, name: String, purchaseDate: java.sql.Timestamp, category: String, costPrice: scala.math.BigDecimal)
-  /** GetResult implicit for fetching UserCostsRow objects using plain SQL queries */
-  implicit def GetResultUserCostsRow(implicit e0: GR[Int], e1: GR[String], e2: GR[java.sql.Timestamp], e3: GR[scala.math.BigDecimal]): GR[UserCostsRow] = GR{
+   *  @param itemPrice Database column item_price SqlType(numeric) */
+  case class UserItemCostsRow(itemId: Int, userId: Int, itemName: String, purchaseDate: java.sql.Timestamp, category: String, itemPrice: scala.math.BigDecimal)
+  /** GetResult implicit for fetching UserItemCostsRow objects using plain SQL queries */
+  implicit def GetResultUserItemCostsRow(implicit e0: GR[Int], e1: GR[String], e2: GR[java.sql.Timestamp], e3: GR[scala.math.BigDecimal]): GR[UserItemCostsRow] = GR{
     prs => import prs._
-    UserCostsRow.tupled((<<[Int], <<[Int], <<[String], <<[java.sql.Timestamp], <<[String], <<[scala.math.BigDecimal]))
+    UserItemCostsRow.tupled((<<[Int], <<[Int], <<[String], <<[java.sql.Timestamp], <<[String], <<[scala.math.BigDecimal]))
   }
-  /** Table description of table user_costs. Objects of this class serve as prototypes for rows in queries. */
-  class UserCosts(_tableTag: Tag) extends profile.api.Table[UserCostsRow](_tableTag, "user_costs") {
-    def * = (costId, userId, name, purchaseDate, category, costPrice) <> (UserCostsRow.tupled, UserCostsRow.unapply)
+  /** Table description of table user_item_costs. Objects of this class serve as prototypes for rows in queries. */
+  class UserItemCosts(_tableTag: Tag) extends profile.api.Table[UserItemCostsRow](_tableTag, "user_item_costs") {
+    def * = (itemId, userId, itemName, purchaseDate, category, itemPrice) <> (UserItemCostsRow.tupled, UserItemCostsRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = ((Rep.Some(costId), Rep.Some(userId), Rep.Some(name), Rep.Some(purchaseDate), Rep.Some(category), Rep.Some(costPrice))).shaped.<>({r=>import r._; _1.map(_=> UserCostsRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = ((Rep.Some(itemId), Rep.Some(userId), Rep.Some(itemName), Rep.Some(purchaseDate), Rep.Some(category), Rep.Some(itemPrice))).shaped.<>({r=>import r._; _1.map(_=> UserItemCostsRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
-    /** Database column cost_id SqlType(int4) */
-    val costId: Rep[Int] = column[Int]("cost_id")
+    /** Database column item_id SqlType(int4) */
+    val itemId: Rep[Int] = column[Int]("item_id")
     /** Database column user_id SqlType(int4) */
     val userId: Rep[Int] = column[Int]("user_id")
-    /** Database column name SqlType(text) */
-    val name: Rep[String] = column[String]("name")
+    /** Database column item_name SqlType(text) */
+    val itemName: Rep[String] = column[String]("item_name")
     /** Database column purchase_date SqlType(timestamp) */
     val purchaseDate: Rep[java.sql.Timestamp] = column[java.sql.Timestamp]("purchase_date")
     /** Database column category SqlType(text) */
     val category: Rep[String] = column[String]("category")
-    /** Database column cost_price SqlType(numeric) */
-    val costPrice: Rep[scala.math.BigDecimal] = column[scala.math.BigDecimal]("cost_price")
+    /** Database column item_price SqlType(numeric) */
+    val itemPrice: Rep[scala.math.BigDecimal] = column[scala.math.BigDecimal]("item_price")
 
-    /** Primary key of UserCosts (database name user_costs_pkey) */
-    val pk = primaryKey("user_costs_pkey", (userId, costId))
+    /** Primary key of UserItemCosts (database name user_item_costs_pkey) */
+    val pk = primaryKey("user_item_costs_pkey", (userId, itemId))
 
-    /** Foreign key referencing Users (database name user_costs_user_id_fkey) */
-    lazy val usersFk = foreignKey("user_costs_user_id_fkey", userId, Users)(r => r.id, onUpdate=ForeignKeyAction.NoAction, onDelete=ForeignKeyAction.Cascade)
+    /** Foreign key referencing Users (database name user_item_costs_user_id_fkey) */
+    lazy val usersFk = foreignKey("user_item_costs_user_id_fkey", userId, Users)(r => r.id, onUpdate=ForeignKeyAction.NoAction, onDelete=ForeignKeyAction.Cascade)
   }
-  /** Collection-like TableQuery object for table UserCosts */
-  lazy val UserCosts = new TableQuery(tag => new UserCosts(tag))
+  /** Collection-like TableQuery object for table UserItemCosts */
+  lazy val UserItemCosts = new TableQuery(tag => new UserItemCosts(tag))
 
   /** Entity class storing rows of table Users
    *  @param id Database column id SqlType(serial), AutoInc, PrimaryKey
