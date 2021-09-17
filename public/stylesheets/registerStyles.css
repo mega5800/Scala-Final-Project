@@ -1,0 +1,103 @@
+*, *::before, *::after
+{
+    box-sizing: border-box;
+    font-family: Gotham Rounded, sans-serif;
+    font-weight: normal;
+}
+
+body
+{
+    padding: 0;
+    margin: 0;
+    background: linear-gradient(to right, #00AAFF, #00FF6C);
+    overflow: hidden;
+}
+
+/*#region main-wrapper*/
+.main-wrapper
+{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -50px;
+    margin-left: -50px;
+    width: 100px;
+    height: 100px;
+}
+/*#endregion main-wrapper*/
+
+/*#region user details and button side by side*/
+#main-wrapper
+{
+    display: flex;
+    margin-left: -275px;
+}
+
+#new-user-details
+{
+}
+
+#register-button-grid
+{
+    margin-top: -10px;
+    margin-left: 75px;
+}
+/*#endregion user details and button side by side*/
+
+/*#region new-user-details*/
+.new-user-details
+{
+    display: grid;
+    justify-content: center;
+    align-content: center;
+    grid-template-columns: repeat(2, 200px);
+    margin-bottom: 10px;
+}
+
+.new-user-details > label
+{
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.new-user-details > input
+{
+    margin-left: auto;
+    margin-right: auto;
+}
+/*#endregion new-user-details*/
+
+/*#region register-button-grid*/
+.register-button-grid
+{
+    display: grid;
+    justify-content: center;
+    align-content: center;
+    grid-template-columns: repeat(3, 64px);
+    margin-top: 50px;
+    margin-left: 50px;
+}
+
+.register-button-grid > input,a
+{
+    cursor: pointer;
+    font-size: 2rem;
+    border: 1px solid white;
+    outline: none;
+    background-color: rgba(255, 255, 255, .75);
+}
+
+.register-button-grid > input:hover, a:hover
+{
+    background-color: rgba(255, 255, 255, .9);
+}
+/*#endregion register-button-grid*/
+
+/*#region error-msg-grid*/
+.error-msg-grid
+{
+    margin-top: 375px;
+    margin-left: 50px;
+    text-align: center;
+}
+/*#endregion error-msg-grid*/

@@ -1,18 +1,24 @@
 @()(implicit request: RequestHeader, flash: Flash)
-
+<link rel="stylesheet" type="text/css" href='@routes.Assets.versioned("stylesheets/registerStyles.css")'/>
 @main("Register page") {
     <form method= "post" action="@routes.UserController.createUser">
         @helper.CSRF.formField
-        <label for="username">Username:</label>
-        <input type="text" name="username" id="username">
-        <br>
-        <label for="password">Password:</label>
-        <input type="password" name="password" id="password">
-        <br>
-        <label for="email">Email:</label>
-        <input type="email" name="email" id="email">
-        <br>
-        <input type="submit" value="Register">
-        <div><span style="color: red">@flash.get("error")</span></div>
+        <div class="main-wrapper" id="main-wrapper">
+            <div class="new-user-details" id="new-user-details">
+                <label for="username">Username:</label>
+                <input type="text" name="username" id="username">
+                <label for="password">Password:</label>
+                <input type="password" name="password" id="password">
+                <label for="email">Email:</label>
+                <input type="email" name="email" id="email">
+            </div>
+            <div class="register-button-grid" id="register-button-grid">
+                <a href="@routes.HomeController.loginPage"><img src="@routes.Assets.versioned("images/goBackIcon.png")" title="Go Back"></a>
+                <input type="image" src="@routes.Assets.versioned("images/registerIcon.png")" alt="Register" title="Register">
+            </div>
+        </div>
+        <div class="error-msg-grid">
+            <span style="color: red">@flash.get("error")</span>
+        </div>
     </form>
 }
