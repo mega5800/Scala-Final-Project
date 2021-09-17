@@ -26,8 +26,26 @@ body
 }
 /*#endregion main-wrapper*/
 
-/*#region login-grid*/
-.login-grid
+/*#region user details and button side by side*/
+#main-wrapper
+{
+    display: flex;
+    margin-left: -275px;
+}
+
+#new-user-details
+{
+}
+
+#register-button-grid
+{
+    margin-top: -10px;
+    margin-left: 75px;
+}
+/*#endregion user details and button side by side*/
+
+/*#region new-user-details*/
+.new-user-details
 {
     display: grid;
     justify-content: center;
@@ -36,21 +54,21 @@ body
     margin-bottom: 10px;
 }
 
-.login-grid > label
+.new-user-details > label
 {
     margin-left: auto;
     margin-right: auto;
 }
 
-.login-grid > input
+.new-user-details > input
 {
     margin-left: auto;
     margin-right: auto;
 }
-/*#endregion login-grid*/
+/*#endregion new-user-details*/
 
-/*#region login-buttons-grid*/
-.login-buttons-grid
+/*#region register-button-grid*/
+.register-button-grid
 {
     display: grid;
     justify-content: center;
@@ -60,7 +78,7 @@ body
     margin-left: 50px;
 }
 
-.login-buttons-grid > input, a
+.register-button-grid > input
 {
     cursor: pointer;
     font-size: 2rem;
@@ -69,18 +87,18 @@ body
     background-color: rgba(255, 255, 255, .75);
 }
 
-.login-buttons-grid > input:hover, a:hover
+.register-button-grid > input:hover, a:hover
 {
     background-color: rgba(255, 255, 255, .9);
 }
-/*#endregion login-buttons-grid*/
+/*#endregion register-button-grid*/
 
 /*#region error-msg-grid*/
 .error-msg-grid
 {
-    margin-top: 75px;
-    margin-left: -175px;
-    width: 500px;
+    margin-top: 375px;
+    margin-left: 50px;
+    /*width: 500px;*/
     text-align: center;
 }
 /*#endregion error-msg-grid*/
