@@ -1,0 +1,93 @@
+*, *::before, *::after
+{
+    box-sizing: border-box;
+    font-family: Gotham Rounded, sans-serif;
+    font-weight: normal;
+}
+
+body
+{
+    padding: 0;
+    margin: 0;
+    background: linear-gradient(to right, #00AAFF, #00FF6C);
+}
+
+/*#region main-wrapper*/
+.main-wrapper
+{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -50px;
+    margin-left: -50px;
+    width: 100px;
+    height: 100px;
+}
+/*#endregion main-wrapper*/
+
+/*#region login-grid*/
+.login-grid
+{
+    display: grid;
+    justify-content: center;
+    align-content: center;
+    grid-template-columns: repeat(2, 200px);
+    margin-bottom: 10px;
+}
+
+.login-grid > label
+{
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.login-grid > input
+{
+    margin-left: auto;
+    margin-right: auto;
+}
+/*#endregion login-grid*/
+
+/*#region login-buttons-grid*/
+.login-buttons-grid
+{
+    display: grid;
+    justify-content: center;
+    align-content: center;
+    grid-template-columns: repeat(3, 64px);
+    margin-top: 50px;
+    margin-left: 50px;
+}
+
+.login-buttons-grid > input, a
+{
+    cursor: pointer;
+    font-size: 2rem;
+    border: 1px solid white;
+    outline: none;
+    background-color: rgba(255, 255, 255, .75);
+}
+
+.login-buttons-grid > input:hover, a:hover
+{
+    background-color: rgba(255, 255, 255, .9);
+}
+
+.login-buttons-grid > span
+{
+    margin-top: auto;
+    margin-left: 50px;
+    margin-right: auto;
+    width: 40px;
+}
+/*#endregion login-buttons-grid*/
+
+/*#region error-msg-grid*/
+.error-msg-grid
+{
+    margin-top: 75px;
+    margin-left: -175px;
+    width: 500px;
+    text-align: center;
+}
+/*#endregion error-msg-grid*/
