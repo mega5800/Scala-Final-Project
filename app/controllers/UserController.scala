@@ -16,7 +16,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class UserController @Inject()(authenticatedAction: AuthenticatedAction, nonAuthenticatedAction: NonAuthenticatedAction, userManagerModel: UserManagerModel, mailerService: MailerService, cc: ControllerComponents)(implicit executionContext: ExecutionContext, futures: Futures)
   extends AbstractController(cc)
   {
-
   private val userNameChecker:TextChecker = new TextChecker(CheckerTypes.Username)
   private val passwordChecker:TextChecker = new TextChecker(CheckerTypes.Password)
   private val emailChecker:EmailChecker = new EmailChecker(CheckerTypes.Email)
@@ -58,7 +57,7 @@ class UserController @Inject()(authenticatedAction: AuthenticatedAction, nonAuth
     checkUserNameValidity()
     if (errorMessageString.isEmpty)
     {
-      checkPasswordValidity()
+      checkPasswordValidity(passwordChecker)
       if (errorMessageString.isEmpty)
       {
         checkEmailValidity()
@@ -87,7 +86,7 @@ class UserController @Inject()(authenticatedAction: AuthenticatedAction, nonAuth
     errorMessageString = userNameChecker.getGivenTextValidityErrorMessage()
   }
 
-  private def checkPasswordValidity(): Unit =
+  private def checkPasswordValidity(passwordChecker:TextChecker): Unit =
   {
     errorMessageString = passwordChecker.getGivenTextValidityErrorMessage()
   }
@@ -105,7 +104,7 @@ class UserController @Inject()(authenticatedAction: AuthenticatedAction, nonAuth
     checkUserNameValidity()
     if (errorMessageString.isEmpty)
     {
-      checkPasswordValidity()
+      checkPasswordValidity(passwordChecker)
       if (errorMessageString.isEmpty)
       {
         getResultForUserValidation(userNameChecker.TextValueToCheck, passwordChecker.TextValueToCheck)
@@ -174,38 +173,27 @@ class UserController @Inject()(authenticatedAction: AuthenticatedAction, nonAuth
     }
   }
 
-  // TODO: validate input fields newPassword and confirmPassword
   def resetPassword: Action[AnyContent] = nonAuthenticatedAction.async { request =>
+    val confirmPasswordChecker:TextChecker = new TextChecker(CheckerTypes.Password)
     val passwordResetData = request.body.asFormUrlEncoded.get
     passwordChecker.TextValueToCheck = passwordResetData("newPassword").head
-    checkPasswordValidity()
+    confirmPasswordChecker.TextValueToCheck = passwordResetData("confirmPassword").head
+    val passwordResetToken = passwordResetData("passwordResetToken").head
 
-    if (errorMessageString.isEmpty)
+    if (passwordChecker.getGivenTextValidityErrorMessage().isEmpty && confirmPasswordChecker.getGivenTextValidityErrorMessage().isEmpty)
     {
-      val newPassword = passwordChecker.TextValueToCheck
-      passwordChecker.TextValueToCheck = passwordResetData("confirmPassword").head
-      checkPasswordValidity()
-
-      if (errorMessageString.isEmpty)
+      if (confirmPasswordChecker.TextValueToCheck == passwordChecker.TextValueToCheck)
       {
-        if (newPassword == passwordChecker.TextValueToCheck)
-        {
-          getResultForPasswordReset(passwordChecker.TextValueToCheck, newPassword)
-        }
-        else
-        {
-          val passwordResetToken = passwordResetData("passwordResetToken").head
-          Future.successful(Redirect(routes.UserController.passwordResetPage(passwordResetToken)).flashing("message" -> "Passwords do not match"))
-        }
+        getResultForPasswordReset(passwordResetToken, passwordChecker.TextValueToCheck)
       }
       else
       {
-        Future.successful(Redirect(routes.UserController.requestPasswordReset).flashing("error" -> errorMessageString.get))
+        Future.successful(Redirect(routes.UserController.passwordResetPage(passwordResetToken)).flashing("error" -> s"Passwords dont match"))
       }
     }
     else
     {
-      Future.successful(Redirect(routes.UserController.requestPasswordReset).flashing("error" -> errorMessageString.get))
+      Future.successful(Redirect(routes.UserController.passwordResetPage(passwordResetToken)).flashing("error" -> s"Please enter 2 matching passwords with at least ${passwordChecker.MinimalAmountOfChars} chars"))
     }
   }
 
