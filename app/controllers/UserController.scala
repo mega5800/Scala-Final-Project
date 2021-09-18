@@ -1,6 +1,7 @@
 package controllers
 
 import controllers.actions.{AuthenticatedAction, NonAuthenticatedAction}
+import controllers.utilties.CheckerTypes.CheckerTypes
 import controllers.utilties._
 import models.UserManagerModel
 import play.api.libs.concurrent.Futures
@@ -13,10 +14,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class UserController @Inject()(authenticatedAction: AuthenticatedAction, nonAuthenticatedAction: NonAuthenticatedAction, userManagerModel: UserManagerModel, mailerService: MailerService, cc: ControllerComponents)(implicit executionContext: ExecutionContext, futures: Futures)
-  extends AbstractController(cc) {
-
-  private val loginCredentialsChecker: LoginCredentialsChecker = new LoginCredentialsChecker()
-  private val registerCredentialsChecker: RegisterCredentialsChecker = new RegisterCredentialsChecker()
+  extends AbstractController(cc)
+  {
+  private val userNameChecker:TextChecker = new TextChecker(CheckerTypes.Username)
+  private val passwordChecker:TextChecker = new TextChecker(CheckerTypes.Password)
+  private val emailChecker:EmailChecker = new EmailChecker(CheckerTypes.Email)
 
   private var errorMessageString: Option[String] = None
 
@@ -48,34 +50,75 @@ class UserController @Inject()(authenticatedAction: AuthenticatedAction, nonAuth
 
   def createUser: Action[AnyContent] = nonAuthenticatedAction.async { request =>
     val credentials = request.body.asFormUrlEncoded.get // never empty
-    registerCredentialsChecker.UserName = credentials("username").head
-    registerCredentialsChecker.Password = credentials("password").head
-    registerCredentialsChecker.Email = credentials("email").head
+    userNameChecker.TextValueToCheck = credentials("username").head
+    passwordChecker.TextValueToCheck = credentials("password").head
+    emailChecker.TextValueToCheck = credentials("email").head
 
-    errorMessageString = registerCredentialsChecker.getRegisterCredentialsValidityErrorMessage()
-
-    if (errorMessageString.isEmpty) {
-      getResultForUserCreation(registerCredentialsChecker.UserName, registerCredentialsChecker.Password, registerCredentialsChecker.Email)
+    checkUserNameValidity()
+    if (errorMessageString.isEmpty)
+    {
+      checkPasswordValidity(passwordChecker)
+      if (errorMessageString.isEmpty)
+      {
+        checkEmailValidity()
+        if (errorMessageString.isEmpty)
+        {
+          getResultForUserCreation(userNameChecker.TextValueToCheck, passwordChecker.TextValueToCheck, emailChecker.TextValueToCheck)
+        }
+        else
+        {
+          Future.successful(Redirect(routes.HomeController.registerPage).flashing("error" -> errorMessageString.get))
+        }
+      }
+      else
+      {
+        Future.successful(Redirect(routes.HomeController.registerPage).flashing("error" -> errorMessageString.get))
+      }
     }
-    else {
+    else
+    {
       Future.successful(Redirect(routes.HomeController.registerPage).flashing("error" -> errorMessageString.get))
     }
   }
 
+  private def checkUserNameValidity(): Unit =
+  {
+    errorMessageString = userNameChecker.getGivenTextValidityErrorMessage()
+  }
+
+  private def checkPasswordValidity(passwordChecker:TextChecker): Unit =
+  {
+    errorMessageString = passwordChecker.getGivenTextValidityErrorMessage()
+  }
+
+  private def checkEmailValidity(): Unit =
+  {
+    errorMessageString = emailChecker.getGivenEmailValidityErrorMessage()
+  }
+
   def validateUser: Action[AnyContent] = nonAuthenticatedAction.async { request =>
     val credentials = request.body.asFormUrlEncoded.get // never empty
-    loginCredentialsChecker.UserName = credentials("username").head
-    loginCredentialsChecker.Password = credentials("password").head
+    userNameChecker.TextValueToCheck = credentials("username").head
+    passwordChecker.TextValueToCheck = credentials("password").head
 
-    errorMessageString = loginCredentialsChecker.getLoginCredentialsValidityErrorMessage()
-    if (errorMessageString.isEmpty) {
-      getResultForUserValidation(loginCredentialsChecker.UserName, loginCredentialsChecker.Password)
+    checkUserNameValidity()
+    if (errorMessageString.isEmpty)
+    {
+      checkPasswordValidity(passwordChecker)
+      if (errorMessageString.isEmpty)
+      {
+        getResultForUserValidation(userNameChecker.TextValueToCheck, passwordChecker.TextValueToCheck)
+      }
+      else
+      {
+        Future.successful(Redirect(routes.HomeController.loginPage).flashing("error" -> errorMessageString.get))
+      }
     }
-    else {
+    else
+    {
       Future.successful(Redirect(routes.HomeController.loginPage).flashing("error" -> errorMessageString.get))
     }
   }
-
 
   def logout: Action[AnyContent] = authenticatedAction { request =>
     val userId = request.attrs(Attributes.UserID)
@@ -100,11 +143,18 @@ class UserController @Inject()(authenticatedAction: AuthenticatedAction, nonAuth
     }
   }
 
-  // TODO: validate email input field
   def requestPasswordReset: Action[AnyContent] = nonAuthenticatedAction.async { implicit request =>
-    val email = request.body.asFormUrlEncoded.get("email").head
+    emailChecker.TextValueToCheck = request.body.asFormUrlEncoded.get("email").head
 
-    getResultForPasswordResetRequest(email)
+    checkEmailValidity()
+    if (errorMessageString.isEmpty)
+    {
+      getResultForPasswordResetRequest(emailChecker.TextValueToCheck)
+    }
+    else
+    {
+      Future.successful(Redirect(routes.UserController.forgotPasswordPage).flashing("error" -> errorMessageString.get))
+    }
   }
 
   private def getResultForPasswordResetRequest(email: String): Future[Result] = {
@@ -123,18 +173,27 @@ class UserController @Inject()(authenticatedAction: AuthenticatedAction, nonAuth
     }
   }
 
-  // TODO: validate input fields newPassword and confirmPassword
   def resetPassword: Action[AnyContent] = nonAuthenticatedAction.async { request =>
+    val confirmPasswordChecker:TextChecker = new TextChecker(CheckerTypes.Password)
     val passwordResetData = request.body.asFormUrlEncoded.get
-    val newPassword = passwordResetData("newPassword").head
-    val confirmPassword = passwordResetData("confirmPassword").head
+    passwordChecker.TextValueToCheck = passwordResetData("newPassword").head
+    confirmPasswordChecker.TextValueToCheck = passwordResetData("confirmPassword").head
     val passwordResetToken = passwordResetData("passwordResetToken").head
 
-    if (newPassword != confirmPassword) {
-      Future.successful(Redirect(routes.UserController.passwordResetPage(passwordResetToken)).flashing("message" -> "Passwords do not match."))
+    if (passwordChecker.getGivenTextValidityErrorMessage().isEmpty && confirmPasswordChecker.getGivenTextValidityErrorMessage().isEmpty)
+    {
+      if (confirmPasswordChecker.TextValueToCheck == passwordChecker.TextValueToCheck)
+      {
+        getResultForPasswordReset(passwordResetToken, passwordChecker.TextValueToCheck)
+      }
+      else
+      {
+        Future.successful(Redirect(routes.UserController.passwordResetPage(passwordResetToken)).flashing("error" -> s"Passwords dont match"))
+      }
     }
-    else {
-      getResultForPasswordReset(passwordResetToken, newPassword)
+    else
+    {
+      Future.successful(Redirect(routes.UserController.passwordResetPage(passwordResetToken)).flashing("error" -> s"Please enter 2 matching passwords with at least ${passwordChecker.MinimalAmountOfChars} chars"))
     }
   }
 
@@ -155,5 +214,4 @@ class UserController @Inject()(authenticatedAction: AuthenticatedAction, nonAuth
       }
     }
   }
-
 }

@@ -1,10 +1,11 @@
 package controllers.utilties
 
+import controllers.utilties.CheckerTypes.CheckerTypes
 import controllers.utilties.CredentialsValidityStates.CredentialsValidityStates
 
-class RegisterCredentialsChecker(private var userName:String="", private var password:String="", private var email:String="")
+class EmailChecker(private var checkerType:CheckerTypes, private var emailValueToCheck:String="")
 {
-  private val loginCredentialsChecker: LoginCredentialsChecker = new LoginCredentialsChecker()
+  require(checkerType == CheckerTypes.Email)
 
   private val emailRegex = """(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])""".r
 
@@ -12,37 +13,22 @@ class RegisterCredentialsChecker(private var userName:String="", private var pas
     Map(CredentialsValidityStates.EmptyEmail->"Please enter an email",
         CredentialsValidityStates.InvalidEmail->"Please enter a valid email")
 
-  def Email:String = email
-  def Email_=(newEmail:String) {email = newEmail}
-
-  def UserName:String = loginCredentialsChecker.UserName
-  def UserName_=(newUserName:String) {loginCredentialsChecker.UserName = newUserName}
-
-  def Password:String = loginCredentialsChecker.Password
-  def Password_=(newPassword:String) {loginCredentialsChecker.Password = newPassword}
-
-  def getRegisterCredentialsValidityErrorMessage():Option[String] =
+  def CheckerType:CheckerTypes = checkerType
+  def CheckerType_=(newCheckerType:CheckerTypes): Unit =
   {
-    var errorMessageResult: Option[String] = loginCredentialsChecker.getLoginCredentialsValidityErrorMessage()
-
-    if (errorMessageResult.isEmpty)
-    {
-      val credentialsValidityState = checkRegisterCredentialsValidity()
-      if (credentialsValidityState != CredentialsValidityStates.CredentialsValid)
-      {
-        errorMessageResult = Option(credentialsValidityStatesMap(credentialsValidityState))
-      }
-    }
-
-    errorMessageResult
+    require(newCheckerType == CheckerTypes.Email)
+    checkerType = newCheckerType
   }
 
-  private def checkRegisterCredentialsValidity():CredentialsValidityStates =
+  def TextValueToCheck:String = emailValueToCheck
+  def TextValueToCheck_=(newTextValueToCheck:String) {emailValueToCheck = newTextValueToCheck}
+
+  private def checkGivenEmailValidity():CredentialsValidityStates =
   {
     var credentialsValidityState: CredentialsValidityStates = CredentialsValidityStates.EmptyState
 
-    if (email.isEmpty) credentialsValidityState = CredentialsValidityStates.EmptyEmail
-    else if (!emailValidityCheck(email)) credentialsValidityState = CredentialsValidityStates.InvalidEmail
+    if (emailValueToCheck.isEmpty) credentialsValidityState = CredentialsValidityStates.EmptyEmail
+    else if (!emailValidityCheck(emailValueToCheck)) credentialsValidityState = CredentialsValidityStates.InvalidEmail
     else credentialsValidityState = CredentialsValidityStates.CredentialsValid
 
     //inner function for checking email validity
@@ -55,5 +41,18 @@ class RegisterCredentialsChecker(private var userName:String="", private var pas
     }
 
     credentialsValidityState
+  }
+
+  def getGivenEmailValidityErrorMessage():Option[String] =
+  {
+    var errorMessageResult: Option[String] = None
+    val credentialsValidityState: CredentialsValidityStates = checkGivenEmailValidity()
+
+    if (credentialsValidityState != CredentialsValidityStates.CredentialsValid)
+    {
+      errorMessageResult = Option(credentialsValidityStatesMap(credentialsValidityState))
+    }
+
+    errorMessageResult
   }
 }
