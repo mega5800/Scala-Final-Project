@@ -2,19 +2,21 @@
 @(userItemCosts: Seq[Tables#UserItemCostsRow])(implicit request: RequestHeader, flash: Flash)
 
 @main("Home page") {
-    <h1>Your detailed costs</h1>
+    <h1 class="text-center">Your detailed costs</h1>
+
+    <link rel="stylesheet" type="text/css" href='@routes.Assets.versioned("stylesheets/bootstrap.css")'/>
+    <link rel="stylesheet" type="text/css" href='@routes.Assets.versioned("stylesheets/indexStyles.css")'/>
 
     <span>@flash.get("message")</span>
-    <div class="user-cost-details">
+    <div class="user-cost-details overflow-hidden">
         @if(userItemCosts.nonEmpty){
-            <table>
-                <tr>
+            <table class="table table-hover table-borderless">
+                <thead>
                     <th>Item Name</th>
                     <th>Purchase Date</th>
                     <th>Category</th>
                     <th>Item Price</th>
-                </tr>
-
+                </thead>
 
             @for(itemCost <- userItemCosts){
                 <tr>
@@ -23,10 +25,17 @@
                     <td>@{itemCost.category}</td>
                     <td>@{itemCost.itemPrice.toString}</td>
                     <td>
+                        <form method="post" action="@routes.CostController.editItemCost()">
+                            @helper.CSRF.formField
+                            <input type="image" src="@routes.Assets.versioned("images/editIcon.png")" alt="Edit Cost" title="Edit Cost">
+                            <input type="hidden" name="editItem" value="@{itemCost.itemId}">
+                        </form>
+                    </td>
+                    <td>
                         <form method="post" action="@routes.CostController.deleteItemCost()">
                             @helper.CSRF.formField
+                            <input type="image" src="@routes.Assets.versioned("images/deleteIcon.png")" alt="Delete Cost" title="Delete Cost">
                             <input type="hidden" name="deleteItem" value="@{itemCost.itemId}">
-                            <input type="submit" value="Delete item">
                         </form>
                     </td>
                 </tr>
@@ -36,14 +45,18 @@
         } else{
             <div>No details to display :(</div>
         }
-
     </div>
 
-    <a href="@routes.CostController.addItemCostPage()">Add costs</a>
-
-    <div style="position:absolute; top: 0; right: 0" class="logout">
-        <form action="@routes.UserController.logout">
-            <input type="submit" value="Logout">
-        </form>
+    <div class="bottom_buttons fixed-bottom position-relative">
+        <div class="row justify-content-center">
+            <div class="col-md-1">
+                <a href="@routes.CostController.addItemCostPage()"><img src="@routes.Assets.versioned("images/AddIcon.png")" title="Add New Cost"></a>
+            </div>
+            <div class="col-md-1">
+                <form action="@routes.UserController.logout">
+                    <input type="image" src="@routes.Assets.versioned("images/logoutIcon.png")" alt="Logout" title="Logout">
+                </form>
+            </div>
+        </div>
     </div>
 }
