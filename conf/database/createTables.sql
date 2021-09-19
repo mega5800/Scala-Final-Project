@@ -4,7 +4,7 @@
 
 -- Create database tables
 
-CREATE TABLE IF NOT EXISTS scaladb.public.users
+CREATE TABLE IF NOT EXISTS public.users
 (
     id SERIAL NOT NULL PRIMARY KEY,
     username varchar(20) UNIQUE NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS scaladb.public.users
     created_at TIMESTAMP default CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS scaladb.public.user_item_costs (
+CREATE TABLE IF NOT EXISTS public.user_item_costs (
     item_id int4 NOT NULL,
     user_id int4 NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     item_name TEXT NOT NULL,
@@ -24,14 +24,14 @@ CREATE TABLE IF NOT EXISTS scaladb.public.user_item_costs (
     PRIMARY KEY(user_id, item_id)
 );
 
-CREATE TABLE IF NOT EXISTS scaladb.public.password_requests (
+CREATE TABLE IF NOT EXISTS public.password_requests (
   id SERIAL NOT NULL PRIMARY KEY,
   user_id int4 NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   password_reset_token TEXT UNIQUE NOT NULL,
   password_reset_expiration TIMESTAMP NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS scaladb.public.user_sessions (
+CREATE TABLE IF NOT EXISTS public.user_sessions (
     id SERIAL NOT NULL PRIMARY KEY,
     user_id int4 UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     user_session_token TEXT UNIQUE NOT NULL
