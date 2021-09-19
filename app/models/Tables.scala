@@ -57,20 +57,20 @@ trait Tables {
    *  @param itemId Database column item_id SqlType(int4)
    *  @param userId Database column user_id SqlType(int4)
    *  @param itemName Database column item_name SqlType(text)
-   *  @param purchaseDate Database column purchase_date SqlType(timestamp)
+   *  @param purchaseDate Database column purchase_date SqlType(timestamp), Default(None)
    *  @param category Database column category SqlType(text)
    *  @param itemPrice Database column item_price SqlType(numeric) */
-  case class UserItemCostsRow(itemId: Int, userId: Int, itemName: String, purchaseDate: java.sql.Timestamp, category: String, itemPrice: scala.math.BigDecimal)
+  case class UserItemCostsRow(itemId: Int, userId: Int, itemName: String, purchaseDate: Option[java.sql.Timestamp] = None, category: String, itemPrice: scala.math.BigDecimal)
   /** GetResult implicit for fetching UserItemCostsRow objects using plain SQL queries */
-  implicit def GetResultUserItemCostsRow(implicit e0: GR[Int], e1: GR[String], e2: GR[java.sql.Timestamp], e3: GR[scala.math.BigDecimal]): GR[UserItemCostsRow] = GR{
+  implicit def GetResultUserItemCostsRow(implicit e0: GR[Int], e1: GR[String], e2: GR[Option[java.sql.Timestamp]], e3: GR[scala.math.BigDecimal]): GR[UserItemCostsRow] = GR{
     prs => import prs._
-    UserItemCostsRow.tupled((<<[Int], <<[Int], <<[String], <<[java.sql.Timestamp], <<[String], <<[scala.math.BigDecimal]))
+    UserItemCostsRow.tupled((<<[Int], <<[Int], <<[String], <<?[java.sql.Timestamp], <<[String], <<[scala.math.BigDecimal]))
   }
   /** Table description of table user_item_costs. Objects of this class serve as prototypes for rows in queries. */
   class UserItemCosts(_tableTag: Tag) extends profile.api.Table[UserItemCostsRow](_tableTag, "user_item_costs") {
     def * = (itemId, userId, itemName, purchaseDate, category, itemPrice) <> (UserItemCostsRow.tupled, UserItemCostsRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = ((Rep.Some(itemId), Rep.Some(userId), Rep.Some(itemName), Rep.Some(purchaseDate), Rep.Some(category), Rep.Some(itemPrice))).shaped.<>({r=>import r._; _1.map(_=> UserItemCostsRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = ((Rep.Some(itemId), Rep.Some(userId), Rep.Some(itemName), purchaseDate, Rep.Some(category), Rep.Some(itemPrice))).shaped.<>({r=>import r._; _1.map(_=> UserItemCostsRow.tupled((_1.get, _2.get, _3.get, _4, _5.get, _6.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column item_id SqlType(int4) */
     val itemId: Rep[Int] = column[Int]("item_id")
@@ -78,8 +78,8 @@ trait Tables {
     val userId: Rep[Int] = column[Int]("user_id")
     /** Database column item_name SqlType(text) */
     val itemName: Rep[String] = column[String]("item_name")
-    /** Database column purchase_date SqlType(timestamp) */
-    val purchaseDate: Rep[java.sql.Timestamp] = column[java.sql.Timestamp]("purchase_date")
+    /** Database column purchase_date SqlType(timestamp), Default(None) */
+    val purchaseDate: Rep[Option[java.sql.Timestamp]] = column[Option[java.sql.Timestamp]]("purchase_date", O.Default(None))
     /** Database column category SqlType(text) */
     val category: Rep[String] = column[String]("category")
     /** Database column item_price SqlType(numeric) */

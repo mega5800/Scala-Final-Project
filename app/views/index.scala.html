@@ -19,7 +19,13 @@
             @for(itemCost <- userItemCosts){
                 <tr>
                     <td>@{itemCost.itemName}</td>
-                    <td>@{itemCost.purchaseDate.toLocalDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))}</td>
+                    <td>
+                        @if(itemCost.purchaseDate.nonEmpty){
+                            @{itemCost.purchaseDate.get.toLocalDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))}
+                        }else {
+                            -
+                        }
+                    </td>
                     <td>@{itemCost.category}</td>
                     <td>@{itemCost.itemPrice.toString}</td>
                     <td>
