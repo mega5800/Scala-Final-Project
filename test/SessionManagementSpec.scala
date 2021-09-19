@@ -19,14 +19,14 @@ class SessionManagementSpec extends PlaySpec with GuiceOneServerPerSuite with On
       eventually {
         pageTitle mustBe "Login page"
         currentUrl mustBe loginPageUrl
-        val registerLinkOption = find(cssSelector("a:nth-of-type(1)"))
-        val forgotPasswordLinkOption = find(cssSelector("a:nth-of-type(2)"))
+        val registerLinkOption = find(cssSelector("div.login-buttons-grid a:nth-of-type(1) img"))
+        val forgotPasswordLinkOption = find(cssSelector("div.login-buttons-grid a:nth-of-type(2) img"))
 
         registerLinkOption.nonEmpty mustBe true
         forgotPasswordLinkOption.nonEmpty mustBe true
 
-        registerLinkOption.get.text mustBe "Register here"
-        forgotPasswordLinkOption.get.text mustBe "Forgot password"
+        registerLinkOption.get.attribute("title").get mustBe "Register"
+        forgotPasswordLinkOption.get.attribute("title").get mustBe "Forgot Password"
       }
     }
 
@@ -39,7 +39,7 @@ class SessionManagementSpec extends PlaySpec with GuiceOneServerPerSuite with On
       eventually {
         pageTitle mustBe "Register page"
         currentUrl mustBe registerPageUrl
-        val errorMessage = find(cssSelector("div span"))
+        val errorMessage = find(cssSelector("div.error-msg-grid span"))
         errorMessage.nonEmpty mustBe true
         errorMessage.get.text mustBe "Failed to create user"
       }
@@ -54,7 +54,7 @@ class SessionManagementSpec extends PlaySpec with GuiceOneServerPerSuite with On
       eventually {
         pageTitle mustBe "Login page"
 
-        val errorMessage = find(cssSelector("div span"))
+        val errorMessage = find(cssSelector("div.error-msg-grid span"))
 
         errorMessage.nonEmpty mustBe true
         errorMessage.get.text mustBe "Wrong username or password"
