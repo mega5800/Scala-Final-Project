@@ -1,1 +1,1 @@
-web: target/universal/stage/bin/ScalaFinalProject -Dhttp.port=${PORT} -Dplay.evolutions.db.default.autoApply=true -Ddb.default.driver=org.postgresql.Driver -Ddb.default.url=${DATABASE_URL}
+web: play run --http.port=$PORT $PLAY_OPTS
