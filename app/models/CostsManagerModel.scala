@@ -53,7 +53,6 @@ class CostsManagerModel @Inject()(dbConfigProvider: DatabaseConfigProvider)(impl
     val addCostsForUserAction = UserItemCosts ++= costsToAdd
 
     database.run(addCostsForUserAction).map(insertCount => {
-      println("Bulk add count(?): " + insertCount.get)
       insertCount.get == costsToAdd.length
     })
   }

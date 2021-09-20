@@ -2,10 +2,10 @@ package controllers
 
 import controllers.actions.AuthenticatedAction
 import controllers.utilties.{Attributes, FutureFailure, FutureResultHandler, FutureSuccess}
-import models.CostsManagerModel
+import models.{Categories, CostsManagerModel}
 import models.Tables.UserItemCostsRow
 import play.api.libs.concurrent.Futures
-import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
+import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents, Flash}
 
 import java.sql.{SQLException, Timestamp}
 import javax.inject.Inject
@@ -20,16 +20,22 @@ class CostController @Inject()(authenticatedAction: AuthenticatedAction, costsMa
     val userId = request.attrs(Attributes.UserID)
     val itemCostValues = request.body.asFormUrlEncoded.get
     print(itemCostValues)
-    val itemCostToAdd = processAndCreateItemCost(userId, itemCostValues)
 
-    val handler = FutureResultHandler(costsManagerModel.addSingleCostForUser(itemCostToAdd))
+    processAndCreateItemCost(userId, itemCostValues) match {
+      case Left(itemCostToAdd) =>
+        val handler = FutureResultHandler(costsManagerModel.addSingleCostForUser(itemCostToAdd))
 
-    handler.handle {
-      case FutureSuccess(_) => Future.successful(Redirect(routes.CostController.addItemCost()).flashing("message" -> "Cost added successfully!"))
-      case FutureFailure(exception) => exception match {
-        case _: SQLException => Future.successful(Redirect(routes.CostController.addItemCost()).flashing("message" -> "Failed to add cost"))
-      }
+        handler.handle {
+          case FutureSuccess(_) => Future.successful(Redirect(routes.CostController.addItemCost()).flashing("message" -> "Cost added successfully!"))
+          case FutureFailure(exception) => exception match {
+            case _: SQLException => Future.successful(Redirect(routes.CostController.addItemCost()).flashing("message" -> "Failed to add cost"))
+          }
+        }
+      case Right(errorMessages) =>
+        Future.successful(Redirect(routes.CostController.addItemCost()).flashing("message" -> errorMessages))
     }
+
+
   }
 
   def deleteItemCost(): Action[AnyContent] = authenticatedAction.async { implicit request =>
@@ -47,20 +53,61 @@ class CostController @Inject()(authenticatedAction: AuthenticatedAction, costsMa
     }
   }
 
-  // TODO: validate the fields, check if they're not empty etc
-  private def processAndCreateItemCost(userId: Int, itemCostValues: Map[String, Seq[String]]): UserItemCostsRow = {
+  private def processAndCreateItemCost(userId: Int, itemCostValues: Map[String, Seq[String]]): Either[UserItemCostsRow, String] = {
+    var errorMessages: String = ""
+
     val itemName = itemCostValues("itemName").head
-
-    val purchaseDateString = itemCostValues("purchaseDate").head
-    val format = new java.text.SimpleDateFormat("yyyy-MM-dd'T'hh:mm")
-    val timeInMilliseconds = format.parse(purchaseDateString).getTime
-    val purchaseDateTimestamp = new Timestamp(timeInMilliseconds)
-
     val category = itemCostValues("category").head
+    val purchaseDateString = itemCostValues("purchaseDate").head
     val itemPriceString = itemCostValues("itemPrice").head
-    val itemPrice = BigDecimal(itemPriceString)
+    var purchaseDateTimestamp = Option.empty[Timestamp]
+    var itemPrice = Option.empty[BigDecimal]
 
-    UserItemCostsRow(-1, userId, itemName, purchaseDateTimestamp, category, itemPrice)
+    if(itemName.isEmpty) {
+      errorMessages =  errorMessages + "Item name must not be empty,"
+    }
+
+    if(purchaseDateString.nonEmpty) {
+      purchaseDateTimestamp = convertDateTimeStringToTimestamp(purchaseDateString)
+
+      if (purchaseDateTimestamp.isEmpty) {
+        errorMessages = errorMessages + "Purchase date must be in the following format: yyyy-MM-dd'T'hh:mm,"
+      }
+    }
+
+    if(!Categories.isCategory(category)){
+      errorMessages = errorMessages + s"The category '$category' does not exist,"
+    }
+
+    val isNumeric = itemPriceString.matches("""\d+((\.)\d+)?""")
+
+    if(isNumeric){
+      itemPrice = Some(BigDecimal(itemPriceString))
+    }
+    else{
+      errorMessages = errorMessages + "Item price must be a numeric type,"
+    }
+
+    if(errorMessages.isEmpty){
+      Left(UserItemCostsRow(-1, userId, itemName, purchaseDateTimestamp, category, itemPrice.get))
+    }
+    else{
+      Right(errorMessages)
+    }
+  }
+
+  private def convertDateTimeStringToTimestamp(dateTime: String): Option[Timestamp] = {
+    var timestampResult = Option.empty[Timestamp]
+    try {
+      val format = new java.text.SimpleDateFormat("yyyy-MM-dd'T'hh:mm")
+      val timeInMilliseconds = format.parse(dateTime).getTime
+      timestampResult = Some(new Timestamp(timeInMilliseconds))
+    }
+    catch{
+      case _: IllegalArgumentException => println("Failed to convert date due to illegal format of dateTime input")
+    }
+
+    timestampResult
   }
 
   def editItemCost()=TODO

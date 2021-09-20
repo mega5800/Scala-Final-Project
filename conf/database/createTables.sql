@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS public.user_item_costs (
     item_id int4 NOT NULL,
     user_id int4 NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     item_name TEXT NOT NULL,
-    purchase_date TIMESTAMP NOT NULL,
+    purchase_date TIMESTAMP,
     category TEXT NOT NULL,
     item_price NUMERIC NOT NULL,
 --  super key that requires both user_id and item_id to identify a row

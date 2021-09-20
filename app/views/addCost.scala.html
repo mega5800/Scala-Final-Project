@@ -27,5 +27,12 @@
         <input type="submit" value="Add cost">
     </form>
 
-    <div><span>@flash.get("message")</span></div>
+    <div>
+        @if(!flash.isEmpty){
+            @for(message <- flash.get("message").get.split(',')){
+                <span>@message</span>
+                <br>
+            }
+        }
+    </div>
 }
