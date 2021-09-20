@@ -16,7 +16,12 @@
     <div class="alert alert-success alert-dismissible" role="alert" auto-close="4000">
         <button type="button" class="close" style="float: right;" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span>
         </button>
-        @flash.get("message")
+        @for(message <- flash.get("message").get.split(',')) {
+            @message
+            <br>
+        }
+
+        @*flash.get("message")*@
     </div>
     }
 
@@ -77,17 +82,5 @@
     </div>
 
     <script src="@routes.Assets.versioned("javascripts/index.js")"></script>
+    <script src="@routes.Assets.versioned("javascripts/timeoutMessage.js")"></script>
 }
-    <script>
-        $(function()
-        {
-            var alert = $('div.alert[auto-close]');
-            alert.each(function() {
-            var that = $(this);
-            var time_period = that.attr('auto-close');
-            setTimeout(function() {
-            that.alert('close');
-            }, time_period);
-            });
-        });
-    </script>
