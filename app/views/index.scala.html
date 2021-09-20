@@ -1,4 +1,6 @@
 @import java.time.format.DateTimeFormatter
+
+@import models.Tables.UserItemCostsRow
 @(userItemCosts: Seq[Tables#UserItemCostsRow])(implicit request: RequestHeader, flash: Flash)
 
 @main("Home page") {
@@ -15,21 +17,27 @@
                         <th>Item Name</th>
                         <th>Purchase Date</th>
                         <th>Category</th>
-                        <th>Item Price</th>
+                        <th>Item Price (Total: @{userItemCosts.foldLeft(BigDecimal(0))((total: BigDecimal, userItemCost: Tables#UserItemCostsRow) => total + userItemCost.itemPrice)})</th>
                     </thead>
 
                 @for(itemCost <- userItemCosts){
-                    <tr>
+                    <tr id="@itemCost.itemId" data-is-editable="false">
                         <td>@{itemCost.itemName}</td>
-                        <td>@{itemCost.purchaseDate.toLocalDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))}</td>
+                        <td>
+                            <!-- // Purchase date is optional in case user doesn't remember it -->
+                            @if(itemCost.purchaseDate.nonEmpty) {
+                                @{itemCost.purchaseDate.get.toLocalDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))}
+                            }else {
+                                Missing
+                            }
+                        </td>
                         <td>@{itemCost.category}</td>
                         <td>@{itemCost.itemPrice.toString}</td>
 
                         <td>
-                            <form method="post" action="@routes.CostController.editItemCost()">
+                            <form method="post" action="@routes.CostController.editItemCost()" onsubmit="enableEdit(event, @itemCost.itemId, [@Categories.values.unsorted.map(value => "\"" + value + "\"").mkString(",")])">
                                 @helper.CSRF.formField
                                 <input type="image" src="@routes.Assets.versioned("images/editIcon.png")" alt="Edit Cost" title="Edit Cost">
-                                <input type="hidden" name="editItem" value="@{itemCost.itemId}">
                             </form>
                         </td>
 
@@ -56,4 +64,6 @@
             <input type="image" src="@routes.Assets.versioned("images/logoutIcon.png")" alt="Logout" title="Logout">
         </form>
     </div>
+
+    <script src="@routes.Assets.versioned("javascripts/index.js")"></script>
 }

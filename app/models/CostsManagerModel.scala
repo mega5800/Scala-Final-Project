@@ -10,7 +10,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class CostsManagerModel @Inject()(dbConfigProvider: DatabaseConfigProvider)(implicit executionContext: ExecutionContext) extends DatabaseModel(dbConfigProvider) {
   def getAllCostsForUser(userId: Int): Future[Seq[UserItemCostsRow]] = {
-    val getCostsForUserQuery = UserItemCosts.filter(_.userId === userId)
+    val getCostsForUserQuery = UserItemCosts.sortBy(_.itemId).filter(_.userId === userId)
 
     database.run(getCostsForUserQuery.result)
   }
