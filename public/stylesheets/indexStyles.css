@@ -10,9 +10,32 @@ body
     padding: 0;
     margin: 0;
     background: linear-gradient(to right, #00AAFF, #00FF6C);
+    overflow-x: hidden;
+    overflow-y: hidden;
 }
 
-.pre-scrollable {
-    max-height: 340px;
-    overflow-y: scroll;
+.buttons-grid
+{
+    display: grid;
+    justify-content: center;
+    align-content: center;
+    grid-template-columns: repeat(3, 64px);
+    margin-top: 50px;
+    margin-left: 50px;
+    max-height: 25vh;
 }
+
+.scrollDiv
+{
+    max-height: 75vh;
+    overflow: auto;
+}
+
+#footer
+{
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+/*thead th { position: sticky; top: 0; }*/
