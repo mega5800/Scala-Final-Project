@@ -1,15 +1,16 @@
-import models.CostsManagerModel
+import models.{CostsManagerModel, UserManagerModel}
 import models.Tables.UserItemCostsRow
 
 import java.sql.{SQLException, Timestamp}
 
 class CostsManagerModelSpec extends DatabaseModelSpec {
   private val costsManagerModel = new CostsManagerModel(dbConfProvider)
+  private val userManagerModel = new UserManagerModel(dbConfProvider)
 
   // assume there are currently two test users in the database with empty costs
   lazy val currentTimestamp = new Timestamp(System.currentTimeMillis())
-  private val testUserId1 = 1;
-  private val testUserId2 = 2;
+  private val testUserId1 = await(userManagerModel.createUser("testUser1", "testPassword1", "testUser1@gmail.com"));
+  private val testUserId2 = await(userManagerModel.createUser("testUser2", "testPassword2", "testUser2@gmail.com"));;
   private val singleCostToAdd = UserItemCostsRow(-1, testUserId1, "Pizza", new Timestamp(System.currentTimeMillis()), "Food", 50.0)
   private val costsCollection = List(
     UserItemCostsRow(-1, testUserId2, "Phone charger", currentTimestamp, "Tech", 125),
@@ -89,6 +90,10 @@ class CostsManagerModelSpec extends DatabaseModelSpec {
       await(costsManagerModel.deleteAllCostsForUser(testUserId2)) mustBe true
       await(costsManagerModel.getAllCostsForUser(testUserId2)) mustBe Seq.empty
     }
+
+    "cleanup" in {
+      cleanUp()
+    }
   }
 
   def compareCostsWithoutCostId(firstCost: UserItemCostsRow, secondCost: UserItemCostsRow): Boolean = {
@@ -113,5 +118,8 @@ class CostsManagerModelSpec extends DatabaseModelSpec {
     isEqual
   }
 
-  override def cleanUp(): Unit = ???
+  override def cleanUp(): Unit = {
+    await(userManagerModel.deleteUserById(testUserId1))
+    await(userManagerModel.deleteUserById(testUserId2))
+  }
 }
