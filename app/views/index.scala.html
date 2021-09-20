@@ -6,8 +6,19 @@
 @main("Home page") {
     <h1 class="text-center">Your detailed costs</h1>
 
+    <script src="https://code.jquery.com/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
     <link rel="stylesheet" type="text/css" href='@routes.Assets.versioned("stylesheets/bootstrap.css")'/>
     <link rel="stylesheet" type="text/css" href='@routes.Assets.versioned("stylesheets/indexStyles.css")'/>
+
+    @if(flash.get("message").isEmpty == false){
+    <div class="alert alert-success alert-dismissible" role="alert" auto-close="3000">
+        <button type="button" class="close" style="float: right;" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span>
+        </button>
+        @flash.get("message")
+    </div>
+    }
 
     <div class="user-cost-details">
         @if(userItemCosts.nonEmpty){
@@ -23,6 +34,7 @@
                 @for(itemCost <- userItemCosts){
                     <tr id="@itemCost.itemId" data-is-editable="false">
                         <td>@{itemCost.itemName}</td>
+
                         <td>
                             <!-- // Purchase date is optional in case user doesn't remember it -->
                             @if(itemCost.purchaseDate.nonEmpty) {
@@ -48,7 +60,6 @@
                                 <input type="hidden" name="deleteItem" value="@{itemCost.itemId}">
                             </form>
                         </td>
-
                     </tr>
                 }
                 </table>
@@ -67,3 +78,16 @@
 
     <script src="@routes.Assets.versioned("javascripts/index.js")"></script>
 }
+    <script>
+        $(function()
+        {
+            var alert = $('div.alert[auto-close]');
+            alert.each(function() {
+            var that = $(this);
+            var time_period = that.attr('auto-close');
+            setTimeout(function() {
+            that.alert('close');
+            }, time_period);
+            });
+        });
+    </script>
