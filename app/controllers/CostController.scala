@@ -53,7 +53,7 @@ class CostController @Inject()(authenticatedAction: AuthenticatedAction, costsMa
     }
   }
 
-  private def processAndCreateItemCost(userId: Int, itemCostValues: Map[String, Seq[String]]): Either[UserItemCostsRow, String] = {
+  private def processAndCreateItemCost(userId: Int, itemCostValues: Map[String, Seq[String]], itemId: Int = -1): Either[UserItemCostsRow, String] = {
     var errorMessages: String = ""
 
     val itemName = itemCostValues("itemName").head
@@ -89,7 +89,7 @@ class CostController @Inject()(authenticatedAction: AuthenticatedAction, costsMa
     }
 
     if(errorMessages.isEmpty){
-      Left(UserItemCostsRow(-1, userId, itemName, purchaseDateTimestamp, category, itemPrice.get))
+      Left(UserItemCostsRow(itemId, userId, itemName, purchaseDateTimestamp, category, itemPrice.get))
     }
     else{
       Right(errorMessages)
@@ -110,5 +110,23 @@ class CostController @Inject()(authenticatedAction: AuthenticatedAction, costsMa
     timestampResult
   }
 
-  def editItemCost()=TODO
+  def editItemCost(): Action[AnyContent] = authenticatedAction.async { implicit request =>
+    val userId = request.attrs(Attributes.UserID)
+    val itemCostValues = request.body.asFormUrlEncoded.get
+    val itemId = itemCostValues("itemId").head
+
+    processAndCreateItemCost(userId, itemCostValues, itemId.toInt) match {
+      case Left(updatedItemCost) =>
+        FutureResultHandler(costsManagerModel.updateCostForUser(updatedItemCost)).handle {
+          case FutureSuccess(isUpdated) =>
+            if(isUpdated){
+              Future.successful(Redirect(routes.HomeController.index).flashing("message" -> "Item edited successfully!"))
+            }
+            else{
+              Future.successful(Redirect(routes.HomeController.index).flashing("message" -> "Failed to edit item..."))
+            }
+        }
+      case Right(errorMessages) => Future.successful(Redirect(routes.HomeController.index).flashing("message" -> errorMessages))
+    }
+  }
 }
