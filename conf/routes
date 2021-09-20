@@ -16,6 +16,7 @@ POST        /requestPasswordReset        controllers.UserController.requestPassw
 POST        /resetPassword               controllers.UserController.resetPassword
 GET         /addItemCost                 controllers.CostController.addItemCostPage()
 POST        /addItemCost                 controllers.CostController.addItemCost()
+POST        /editItemCost                controllers.CostController.editItemCost()
 POST        /deleteItemCost              controllers.CostController.deleteItemCost()
 
 # Map static resources from the /public folder to the /assets URL path

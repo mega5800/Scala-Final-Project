@@ -62,4 +62,6 @@ class CostController @Inject()(authenticatedAction: AuthenticatedAction, costsMa
 
     UserItemCostsRow(-1, userId, itemName, purchaseDateTimestamp, category, itemPrice)
   }
+
+  def editItemCost()=TODO
 }
