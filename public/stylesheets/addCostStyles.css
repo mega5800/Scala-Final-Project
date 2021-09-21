@@ -1,0 +1,93 @@
+*, *::before, *::after
+{
+    box-sizing: border-box;
+    font-family: Gotham Rounded, sans-serif;
+    font-weight: normal;
+}
+
+body
+{
+    height: 100vh; /*background color isn't shown bug fix*/
+    padding: 0;
+    margin: 0;
+    background: linear-gradient(to right, #00AAFF, #00FF6C);
+    overflow: hidden;
+}
+
+/*#region main-wrapper*/
+.main-wrapper
+{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -50px;
+    margin-left: -50px;
+    width: 100px;
+    height: 100px;
+}
+
+/*#region user details and button side by side*/
+#main-wrapper
+{
+    display: flex;
+    margin-left: -275px;
+}
+
+#new-cost-details
+{
+}
+
+#add-cost-buttons-grid
+{
+    margin-top: -10px;
+    margin-left: 75px;
+}
+/*#endregion user details and button side by side*/
+/*#endregion main-wrapper*/
+
+/*#region new-cost-details*/
+.new-cost-details
+{
+    display: grid;
+    justify-content: center;
+    align-content: center;
+    grid-template-columns: repeat(2, 200px);
+    margin-bottom: 10px;
+}
+
+.new-cost-details > label
+{
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.new-cost-details > input
+{
+    margin-left: auto;
+    margin-right: auto;
+}
+/*#endregion new-cost-details*/
+
+.add-cost-buttons-grid
+{
+    display: grid;
+    justify-content: center;
+    align-content: center;
+    grid-template-columns: repeat(3, 64px);
+    margin-top: 50px;
+    margin-left: 50px;
+}
+
+.add-cost-buttons-grid > input,a
+{
+    cursor: pointer;
+    font-size: 2rem;
+    border: 1px solid white;
+    outline: none;
+    background-color: rgba(255, 255, 255, .75);
+}
+
+.add-cost-buttons-grid > input:hover, a:hover
+{
+    background-color: rgba(255, 255, 255, .9);
+}

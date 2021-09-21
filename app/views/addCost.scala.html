@@ -1,38 +1,47 @@
 @()(implicit requestHeader: RequestHeader, flash: Flash)
 
 @main("Add cost") {
+    <script src="https://code.jquery.com/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="@routes.Assets.versioned("javascripts/timeoutMessage.js")"></script>
+
+    <link rel="stylesheet" type="text/css" href='@routes.Assets.versioned("stylesheets/bootstrap.css")'/>
+    <link rel="stylesheet" type="text/css" href='@routes.Assets.versioned("stylesheets/addCostStyles.css")'/>
+
+    @if(flash.get("message").isEmpty == false){
+        <div class="alert alert-success alert-dismissible" role="alert" auto-close="4000">
+            <button type="button" class="close" style="float: right;" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span>
+            </button>
+            @for(message <- flash.get("message").get.split(',')) {
+                @message
+                <br>
+                }
+        </div>
+    }
+
     <form method= "post" action="@routes.CostController.addItemCost()">
         @helper.CSRF.formField
+        <div class="main-wrapper" id="main-wrapper">
+            <div class="new-cost-details" id="new-cost-details">
+                <label for="itemName">Item name: </label>
+                <input type="text" name="itemName" id="itemName" style="width: 200px;">
 
-        <label for="itemName">Item name: </label>
-        <input type="text" name="itemName" id="itemName">
-        <br>
+                <label for="purchaseDate">Purchase date: </label>
+                <input type="datetime-local" name="purchaseDate" id="purchaseDate" style="width: 200px;">
 
-        <label for="purchaseDate">Purchase date: </label>
-        <input type="datetime-local" name="purchaseDate" id="purchaseDate">
-        <br>
-
-        <label for="category">Category: </label>
-        <select name="category" id="category">
-            @for(category <- Categories.values.unsorted){
-                <option value=@{category.toString}>@{category.toString}</option>
-            }
-        </select>
-        <br>
-
-        <label for="itemPrice">Item price: </label>
-        <input type="number"  name="itemPrice" id="itemPrice" min="0.00" step="0.01" />
-        <br>
-
-        <input type="submit" value="Add cost">
+                <label for="category">Category: </label>
+                <select name="category" id="category" style="width: 200px;">
+                    @for(category <- Categories.values.unsorted){
+                        <option value=@{category.toString}>@{category.toString}</option>
+                    }
+                </select>
+                <label for="itemPrice">Item price: </label>
+                <input type="number"  name="itemPrice" id="itemPrice" min="0.00" step="0.01" style="width: 200px;"/>
+            </div>
+            <div class="add-cost-buttons-grid" id="add-cost-buttons-grid">
+                <a href="@routes.HomeController.loginPage"><img src="@routes.Assets.versioned("images/goBackIcon.png")" title="Go Back"></a>
+                <input type="image" src="@routes.Assets.versioned("images/saveIcon.png")" alt="Save" title="Save">
+            </div>
+        </div>
     </form>
-
-    <div>
-        @if(!flash.isEmpty){
-            @for(message <- flash.get("message").get.split(',')){
-                <span>@message</span>
-                <br>
-            }
-        }
-    </div>
 }
