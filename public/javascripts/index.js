@@ -4,9 +4,9 @@ function handleEditRequest(editItemCostForm, itemId) {
     const purchaseDate = itemCostRow.querySelector('td:nth-of-type(2)').firstChild.value;
     const category = itemCostRow.querySelector('td:nth-of-type(3)').firstChild.value;
     const itemPrice = itemCostRow.querySelector('td:nth-of-type(4)').firstChild.value;
-    const inputFieldsToAdd = {itemId, itemName, purchaseDate, category, itemPrice}
+    const inputFieldsToAdd = {itemId: itemId, itemName: itemName, purchaseDate: purchaseDate, category: category, itemPrice: itemPrice}
 
-    for(const key in inputFieldsToAdd){
+    for(let key in inputFieldsToAdd){
         const hiddenInputField = document.createElement('input');
         hiddenInputField.type = 'hidden';
         hiddenInputField.name = key;
@@ -86,8 +86,8 @@ function createDropdownSelect(name, options, selectedOption) {
     selectElement.name = name
 
     const optionElements = []
-    for (const option of options) {
-        const optionElement = document.createElement('option')
+    for (let option of options) {
+        let optionElement = document.createElement('option')
         optionElement.value = option
 
         if(option === selectedOption){
@@ -98,7 +98,7 @@ function createDropdownSelect(name, options, selectedOption) {
         optionElements.push(optionElement)
     }
 
-    for(const optionElement of optionElements) {
+    for(let optionElement of optionElements) {
         selectElement.append(optionElement)
     }
 

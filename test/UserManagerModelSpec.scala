@@ -56,13 +56,6 @@ class UserManagerModelSpec() extends DatabaseModelSpec {
     "fail upon creation of user with empty password field" in {
       the[SQLException] thrownBy await(userManagerModel.createUser(testUserUsername, "", testUserEmail))
     }
-
-    // handled by the server not the database for now...
-//    "fail upon creation of user with wrongly formatted email field" in {
-//      the[SQLException] thrownBy await(userManagerModel.createUser("newUser", "newPassword", "badlyformattedemail"))
-//      the[SQLException] thrownBy await(userManagerModel.createUser("newUser", "newPassword", "badly@fasf"))
-//      the[SQLException] thrownBy await(userManagerModel.createUser("newUser", "newPassword", "222@gm,com"))
-//    }
   }
 
   "userManagerModel - user validation" must {

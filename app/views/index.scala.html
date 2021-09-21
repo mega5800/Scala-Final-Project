@@ -52,14 +52,14 @@
                         <td>@{itemCost.itemPrice.toString}</td>
 
                         <td>
-                            <form method="post" action="@routes.CostController.editItemCost()" onsubmit="enableEdit(event, @itemCost.itemId, [@Categories.values.unsorted.map(value => "\"" + value + "\"").mkString(",")])">
+                            <form method="post" action="@routes.CostsController.editItemCost()" onsubmit="enableEdit(event, @itemCost.itemId, [@Categories.values.unsorted.map(value => "\"" + value + "\"").mkString(",")])">
                                 @helper.CSRF.formField
                                 <input type="image" src="@routes.Assets.versioned("images/editIcon.png")" alt="Edit Cost" title="Edit Cost">
                             </form>
                         </td>
 
                         <td>
-                            <form method="post" action="@routes.CostController.deleteItemCost()">
+                            <form method="post" action="@routes.CostsController.deleteItemCost()">
                                 @helper.CSRF.formField
                                 <input type="image" src="@routes.Assets.versioned("images/deleteIcon.png")" alt="Delete Cost" title="Delete Cost">
                                 <input type="hidden" name="deleteItem" value="@{itemCost.itemId}">
@@ -75,7 +75,7 @@
     </div>
 
     <div class="buttons-grid" id="footer">
-        <a href="@routes.CostController.addItemCostPage()"><img src="@routes.Assets.versioned("images/AddIcon.png")" title="Add New Cost"></a>
+        <a href="@routes.CostsController.addItemCostPage()"><img src="@routes.Assets.versioned("images/AddIcon.png")" title="Add New Cost"></a>
         <form action="@routes.UserController.logout">
             <input type="image" src="@routes.Assets.versioned("images/logoutIcon.png")" alt="Logout" title="Logout">
         </form>

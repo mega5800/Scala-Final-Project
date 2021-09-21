@@ -11,7 +11,7 @@ import java.sql.{SQLException, Timestamp}
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class CostController @Inject()(authenticatedAction: AuthenticatedAction, costsManagerModel: CostsManagerModel, cc: ControllerComponents)(implicit executionContext: ExecutionContext, futures: Futures) extends AbstractController(cc) {
+class CostsController @Inject()(authenticatedAction: AuthenticatedAction, costsManagerModel: CostsManagerModel, cc: ControllerComponents)(implicit executionContext: ExecutionContext, futures: Futures) extends AbstractController(cc) {
   def addItemCostPage(): Action[AnyContent] = authenticatedAction { implicit request =>
     Ok(views.html.addCost())
   }
@@ -26,16 +26,14 @@ class CostController @Inject()(authenticatedAction: AuthenticatedAction, costsMa
         val handler = FutureResultHandler(costsManagerModel.addSingleCostForUser(itemCostToAdd))
 
         handler.handle {
-          case FutureSuccess(_) => Future.successful(Redirect(routes.CostController.addItemCost()).flashing("message" -> "Cost added successfully!"))
+          case FutureSuccess(_) => Future.successful(Redirect(routes.CostsController.addItemCost()).flashing("message" -> "Cost added successfully!"))
           case FutureFailure(exception) => exception match {
-            case _: SQLException => Future.successful(Redirect(routes.CostController.addItemCost()).flashing("message" -> "Failed to add cost"))
+            case _: SQLException => Future.successful(Redirect(routes.CostsController.addItemCost()).flashing("message" -> "Failed to add cost"))
           }
         }
       case Right(errorMessages) =>
-        Future.successful(Redirect(routes.CostController.addItemCost()).flashing("message" -> errorMessages))
+        Future.successful(Redirect(routes.CostsController.addItemCost()).flashing("message" -> errorMessages))
     }
-
-
   }
 
   def deleteItemCost(): Action[AnyContent] = authenticatedAction.async { implicit request =>

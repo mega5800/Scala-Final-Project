@@ -14,10 +14,10 @@ GET         /forgotPassword              controllers.UserController.forgotPasswo
 GET         /passwordReset               controllers.UserController.passwordResetPage(token)
 POST        /requestPasswordReset        controllers.UserController.requestPasswordReset
 POST        /resetPassword               controllers.UserController.resetPassword
-GET         /addItemCost                 controllers.CostController.addItemCostPage()
-POST        /addItemCost                 controllers.CostController.addItemCost()
-POST        /editItemCost                controllers.CostController.editItemCost()
-POST        /deleteItemCost              controllers.CostController.deleteItemCost()
+GET         /addItemCost                 controllers.CostsController.addItemCostPage()
+POST        /addItemCost                 controllers.CostsController.addItemCost()
+POST        /editItemCost                controllers.CostsController.editItemCost()
+POST        /deleteItemCost              controllers.CostsController.deleteItemCost()
 
 # Map static resources from the /public folder to the /assets URL path
 GET         /assets/*file                controllers.Assets.versioned(path="/public", file: Asset)
