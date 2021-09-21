@@ -7,6 +7,7 @@
 
 body
 {
+    height: 100vh;
     padding: 0;
     margin: 0;
     background: linear-gradient(to right, #00AAFF, #00FF6C);
@@ -74,13 +75,3 @@ body
     background-color: rgba(255, 255, 255, .9);
 }
 /*#endregion login-buttons-grid*/
-
-/*#region error-msg-grid*/
-.error-msg-grid
-{
-    margin-top: 75px;
-    margin-left: -175px;
-    width: 500px;
-    text-align: center;
-}
-/*#endregion error-msg-grid*/
