@@ -149,10 +149,10 @@ class UserController @Inject()(authenticatedAction: AuthenticatedAction, nonAuth
         val passwordResetLink: String = s"http://localhost:9000/passwordReset?token=$passwordResetToken"
 
         mailerService.sendSimpleEmail(emailTo = email, subject = "ScalaProject - Password reset link", content = passwordResetLink)
-        Future.successful(Redirect(routes.UserController.forgotPasswordPage).flashing("message" -> "Your request has been sent, if your email is in your systems you will receive an email shortly."))
+        Future.successful(Redirect(routes.UserController.forgotPasswordPage).flashing("message" -> "Your request has been sent! If your email is in your systems you will receive an email shortly."))
       case FutureFailure(exception) => exception match {
         case _: SQLException =>
-          Future.successful(Redirect(routes.UserController.forgotPasswordPage).flashing("message" -> "There is a problem, please try again later."))
+          Future.successful(Redirect(routes.UserController.forgotPasswordPage).flashing("message" -> "There is a problem please try again later."))
       }
     }
   }
