@@ -13,7 +13,8 @@ import javax.inject.Inject
 import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 
-class UserManagerModel @Inject()(dbConfigProvider: DatabaseConfigProvider)(implicit executionContext: ExecutionContext) extends DatabaseModel(dbConfigProvider) {
+class UserManagerModel @Inject()(dbConfigProvider: DatabaseConfigProvider)(implicit executionContext: ExecutionContext)
+  extends DatabaseModel(dbConfigProvider) {
   private val secureRandom: SecureRandom = new SecureRandom()
   private val base64Encoder: Base64.Encoder = Base64.getUrlEncoder
   private val passwordResetTokenBitSize = 88
@@ -50,12 +51,10 @@ class UserManagerModel @Inject()(dbConfigProvider: DatabaseConfigProvider)(impli
     // encrypt the password with default salt given by BCrypt library
     val encryptedPassword: String = BCrypt.hashpw(password, BCrypt.gensalt())
 
-    // passing negative 1 to automatically generate an id on the database
-    val currentTimestamp = Some(new Timestamp(System.currentTimeMillis()))
-    val userToAdd: UsersRow = UsersRow(-1, username, encryptedPassword, email, currentTimestamp)
-    val addUserQuery = (Users returning Users.map(_.id)) += userToAdd // or use Users.insertOrUpdate(userToAdd)
+    val createdAt = Some(new Timestamp(System.currentTimeMillis()))
+    val userToAdd: UsersRow = UsersRow(-1, username, encryptedPassword, email, createdAt)
+    val addUserQuery = (Users returning Users.map(_.id)) += userToAdd
 
-    // run the query by the database
     database.run(addUserQuery)
   }
 

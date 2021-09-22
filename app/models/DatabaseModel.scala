@@ -7,6 +7,7 @@ import scala.concurrent.ExecutionContext
 
 abstract class DatabaseModel(protected val dbConfigProvider: DatabaseConfigProvider)(implicit executionContext: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] {
+
   def database:JdbcProfile#Backend#Database = db
 
   protected def notEmptyAndBiggerThanZero(integerOption: Option[Int]): Boolean = {

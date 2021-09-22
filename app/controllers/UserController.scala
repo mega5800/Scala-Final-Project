@@ -14,11 +14,10 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class UserController @Inject()(authenticatedAction: AuthenticatedAction, nonAuthenticatedAction: NonAuthenticatedAction, userManagerModel: UserManagerModel, mailerService: MailerService, cc: ControllerComponents)(implicit executionContext: ExecutionContext, futures: Futures)
-  extends AbstractController(cc)
-  {
-  private val userNameChecker:TextChecker = new TextChecker(CheckerTypes.Username)
-  private val passwordChecker:TextChecker = new TextChecker(CheckerTypes.Password)
-  private val emailChecker:EmailChecker = new EmailChecker(CheckerTypes.Email)
+  extends AbstractController(cc) {
+  private val userNameChecker: TextChecker = new TextChecker(CheckerTypes.Username)
+  private val passwordChecker: TextChecker = new TextChecker(CheckerTypes.Password)
+  private val emailChecker: EmailChecker = new EmailChecker(CheckerTypes.Email)
 
   private var errorMessageString: Option[String] = None
 
@@ -49,73 +48,60 @@ class UserController @Inject()(authenticatedAction: AuthenticatedAction, nonAuth
   }
 
   def createUser: Action[AnyContent] = nonAuthenticatedAction.async { request =>
-    val credentials = request.body.asFormUrlEncoded.get // never empty
+    val credentials = request.body.asFormUrlEncoded.get
     userNameChecker.TextValueToCheck = credentials("username").head
     passwordChecker.TextValueToCheck = credentials("password").head
     emailChecker.TextValueToCheck = credentials("email").head
 
     checkUserNameValidity()
-    if (errorMessageString.isEmpty)
-    {
+    if (errorMessageString.isEmpty) {
       checkPasswordValidity(passwordChecker)
-      if (errorMessageString.isEmpty)
-      {
+      if (errorMessageString.isEmpty) {
         checkEmailValidity()
-        if (errorMessageString.isEmpty)
-        {
+        if (errorMessageString.isEmpty) {
           getResultForUserCreation(userNameChecker.TextValueToCheck, passwordChecker.TextValueToCheck, emailChecker.TextValueToCheck)
         }
-        else
-        {
+        else {
           Future.successful(Redirect(routes.HomeController.registerPage).flashing("error" -> errorMessageString.get))
         }
       }
-      else
-      {
+      else {
         Future.successful(Redirect(routes.HomeController.registerPage).flashing("error" -> errorMessageString.get))
       }
     }
-    else
-    {
+    else {
       Future.successful(Redirect(routes.HomeController.registerPage).flashing("error" -> errorMessageString.get))
     }
   }
 
-  private def checkUserNameValidity(): Unit =
-  {
-    errorMessageString = userNameChecker.getGivenTextValidityErrorMessage()
+  private def checkUserNameValidity(): Unit = {
+    errorMessageString = userNameChecker.getValidityErrorMessage()
   }
 
-  private def checkPasswordValidity(passwordChecker:TextChecker): Unit =
-  {
-    errorMessageString = passwordChecker.getGivenTextValidityErrorMessage()
+  private def checkPasswordValidity(passwordChecker: TextChecker): Unit = {
+    errorMessageString = passwordChecker.getValidityErrorMessage()
   }
 
-  private def checkEmailValidity(): Unit =
-  {
-    errorMessageString = emailChecker.getGivenEmailValidityErrorMessage()
+  private def checkEmailValidity(): Unit = {
+    errorMessageString = emailChecker.getValidityErrorMessage()
   }
 
   def validateUser: Action[AnyContent] = nonAuthenticatedAction.async { request =>
-    val credentials = request.body.asFormUrlEncoded.get // never empty
+    val credentials = request.body.asFormUrlEncoded.get
     userNameChecker.TextValueToCheck = credentials("username").head
     passwordChecker.TextValueToCheck = credentials("password").head
 
     checkUserNameValidity()
-    if (errorMessageString.isEmpty)
-    {
+    if (errorMessageString.isEmpty) {
       checkPasswordValidity(passwordChecker)
-      if (errorMessageString.isEmpty)
-      {
+      if (errorMessageString.isEmpty) {
         getResultForUserValidation(userNameChecker.TextValueToCheck, passwordChecker.TextValueToCheck)
       }
-      else
-      {
+      else {
         Future.successful(Redirect(routes.HomeController.loginPage).flashing("error" -> errorMessageString.get))
       }
     }
-    else
-    {
+    else {
       Future.successful(Redirect(routes.HomeController.loginPage).flashing("error" -> errorMessageString.get))
     }
   }
@@ -147,12 +133,10 @@ class UserController @Inject()(authenticatedAction: AuthenticatedAction, nonAuth
     emailChecker.TextValueToCheck = request.body.asFormUrlEncoded.get("email").head
 
     checkEmailValidity()
-    if (errorMessageString.isEmpty)
-    {
+    if (errorMessageString.isEmpty) {
       getResultForPasswordResetRequest(emailChecker.TextValueToCheck)
     }
-    else
-    {
+    else {
       Future.successful(Redirect(routes.UserController.forgotPasswordPage).flashing("error" -> errorMessageString.get))
     }
   }
@@ -174,25 +158,21 @@ class UserController @Inject()(authenticatedAction: AuthenticatedAction, nonAuth
   }
 
   def resetPassword: Action[AnyContent] = nonAuthenticatedAction.async { request =>
-    val confirmPasswordChecker:TextChecker = new TextChecker(CheckerTypes.Password)
+    val confirmPasswordChecker: TextChecker = new TextChecker(CheckerTypes.Password)
     val passwordResetData = request.body.asFormUrlEncoded.get
     passwordChecker.TextValueToCheck = passwordResetData("newPassword").head
     confirmPasswordChecker.TextValueToCheck = passwordResetData("confirmPassword").head
     val passwordResetToken = passwordResetData("passwordResetToken").head
 
-    if (passwordChecker.getGivenTextValidityErrorMessage().isEmpty && confirmPasswordChecker.getGivenTextValidityErrorMessage().isEmpty)
-    {
-      if (confirmPasswordChecker.TextValueToCheck == passwordChecker.TextValueToCheck)
-      {
+    if (passwordChecker.getValidityErrorMessage().isEmpty && confirmPasswordChecker.getValidityErrorMessage().isEmpty) {
+      if (confirmPasswordChecker.TextValueToCheck == passwordChecker.TextValueToCheck) {
         getResultForPasswordReset(passwordResetToken, passwordChecker.TextValueToCheck)
       }
-      else
-      {
+      else {
         Future.successful(Redirect(routes.UserController.passwordResetPage(passwordResetToken)).flashing("error" -> s"Passwords dont match"))
       }
     }
-    else
-    {
+    else {
       Future.successful(Redirect(routes.UserController.passwordResetPage(passwordResetToken)).flashing("error" -> s"Please enter 2 matching passwords with at least ${passwordChecker.MinimalAmountOfChars} chars"))
     }
   }

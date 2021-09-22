@@ -28,8 +28,8 @@ class FutureResultHandler[T](private val future: Future[T]) {
           println(exception.getMessage)
           val futureFailure = FutureFailure[T](exception)
 
-          if(futureStatusFunction.isDefinedAt(futureFailure)){
-            try{
+          if (futureStatusFunction.isDefinedAt(futureFailure)) {
+            try {
               futureStatusFunction(futureFailure)
             }
             catch {
@@ -38,7 +38,7 @@ class FutureResultHandler[T](private val future: Future[T]) {
                 Future.successful(InternalServerError(oopsMessage))
             }
           }
-          else{
+          else {
             Future.successful(InternalServerError(oopsMessage))
           }
       }
@@ -46,5 +46,7 @@ class FutureResultHandler[T](private val future: Future[T]) {
 }
 
 sealed trait FutureStatus[T]
+
 final case class FutureSuccess[T](value: T) extends FutureStatus[T]
+
 final case class FutureFailure[T](exception: Throwable) extends FutureStatus[T]
