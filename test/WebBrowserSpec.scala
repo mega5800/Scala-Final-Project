@@ -1,15 +1,16 @@
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import org.scalatestplus.play.{HtmlUnitFactory, OneBrowserPerSuite, PlaySpec}
 
-class SessionManagementSpec extends PlaySpec with GuiceOneServerPerSuite with OneBrowserPerSuite with HtmlUnitFactory{
+class WebBrowserSpec extends PlaySpec with GuiceOneServerPerSuite with OneBrowserPerSuite with HtmlUnitFactory {
   val testUsername = "testUsername"
   val testPassword = "testPassword"
   val testEmail = "testEmail@gmail.com"
   val registerPageUrl = s"http://localhost:$port/register"
   val loginPageUrl = s"http://localhost:$port/login"
   val indexPageUrl = s"http://localhost:$port/"
+  val addItemCostPage = s"http://localhost:$port/addItemCost"
 
-  "HomeController" must {
+  "SessionManagement" must {
     "be able to reach register page, register a new user and be redirected to the login page" in {
       go to registerPageUrl
 
@@ -30,7 +31,7 @@ class SessionManagementSpec extends PlaySpec with GuiceOneServerPerSuite with On
       }
     }
 
-   "not be able to create another user with the same credentials provided" in {
+    "not be able to create another user with the same credentials provided" in {
       go to registerPageUrl
 
       pageTitle mustBe "Register page"
@@ -78,7 +79,7 @@ class SessionManagementSpec extends PlaySpec with GuiceOneServerPerSuite with On
 
         // new user must have empty cost details
 
-        val emptyCostsDetails =  find(cssSelector("div.user-cost-details div"))
+        val emptyCostsDetails = find(cssSelector("div.user-cost-details div"))
 
         emptyCostsDetails.nonEmpty mustBe true
         emptyCostsDetails.get.text mustBe "No details to display :("
@@ -100,7 +101,78 @@ class SessionManagementSpec extends PlaySpec with GuiceOneServerPerSuite with On
     }
   }
 
-  def fillRegisterPageFormAndSubmit(username: String, password: String, email: String): Unit = {
+  "UserItemCosts" must {
+    "add a new item to the user item costs" in {
+      go to addItemCostPage
+      pageTitle mustBe "Add cost"
+
+      fillAddCostFormAndSubmit("Pizza", "2020-04-04T13:55", "Food", "55")
+
+      eventually {
+        currentUrl mustBe addItemCostPage
+        pageTitle mustBe "Add cost"
+
+        val addedSuccessfullyMessage = find(cssSelector("div span"))
+
+        addedSuccessfullyMessage.nonEmpty mustBe true
+        addedSuccessfullyMessage.get.text mustBe "Cost added successfully!"
+      }
+    }
+
+    "get an error message upon submitting a form with an empty itemName field" in {
+      fillAddCostFormAndSubmit("", "2020-04-04T13:55", "Food", "55")
+
+      eventually {
+        currentUrl mustBe addItemCostPage
+        pageTitle mustBe "Add cost"
+
+        val addedSuccessfullyMessage = find(cssSelector("div span"))
+
+        addedSuccessfullyMessage.nonEmpty mustBe true
+        addedSuccessfullyMessage.get.text mustBe "Item name must not be empty"
+      }
+    }
+
+    "get an error message upon submitting a form with an empty itemPrice field" in {
+      fillAddCostFormAndSubmit("Pizza", "2020-04-04T13:55", "Food", "")
+
+      eventually {
+        currentUrl mustBe addItemCostPage
+        pageTitle mustBe "Add cost"
+
+        val addedSuccessfullyMessage = find(cssSelector("div span"))
+
+        addedSuccessfullyMessage.nonEmpty mustBe true
+        addedSuccessfullyMessage.get.text mustBe "Item price must be a numeric type"
+      }
+    }
+
+    "load index page and view added item" in {
+      go to indexPageUrl
+
+      val costDetailsTable = find(cssSelector("table"))
+      costDetailsTable.nonEmpty mustBe true
+
+      val firstItemName = find(cssSelector("tr[id='1'] td:nth-of-type(1)"))
+      val firstPurchaseDate = find(cssSelector("tr[id='1'] td:nth-of-type(2)"))
+      val firstCategory = find(cssSelector("tr[id='1'] td:nth-of-type(3)"))
+      val firstItemPrice = find(cssSelector("tr[id='1'] td:nth-of-type(4)"))
+
+      firstItemName.nonEmpty mustBe true
+      firstItemName.get.text mustBe "Pizza"
+
+      firstPurchaseDate.nonEmpty mustBe true
+      firstPurchaseDate.get.text mustBe "2020-04-04 13:55"
+
+      firstCategory.nonEmpty mustBe true
+      firstCategory.get.text mustBe "Food"
+
+      firstItemPrice.nonEmpty mustBe true
+      firstItemPrice.get.text mustBe "55"
+    }
+  }
+
+  private def fillRegisterPageFormAndSubmit(username: String, password: String, email: String): Unit = {
     click on "username"
     textField("username").value = username
     click on "password"
@@ -110,11 +182,23 @@ class SessionManagementSpec extends PlaySpec with GuiceOneServerPerSuite with On
     submit()
   }
 
-  def fillLoginPageFormAndSubmit(username: String, password: String): Unit = {
+  private def fillLoginPageFormAndSubmit(username: String, password: String): Unit = {
     click on "username"
     textField("username").value = username
     click on "password"
     pwdField("password").value = password
+    submit()
+  }
+
+  private def fillAddCostFormAndSubmit(itemName: String, purchaseDate: String, category: String, itemPrice: String): Unit = {
+    click on "itemName"
+    textField("itemName").value = itemName
+    click on "purchaseDate"
+    dateTimeLocalField("purchaseDate").value = purchaseDate
+    click on "category"
+    singleSel("category").value = category
+    click on "itemPrice"
+    numberField("itemPrice").value = itemPrice
     submit()
   }
 }

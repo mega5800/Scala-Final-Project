@@ -19,7 +19,6 @@ class CostsController @Inject()(authenticatedAction: AuthenticatedAction, costsM
   def addItemCost(): Action[AnyContent] = authenticatedAction.async { implicit request =>
     val userId = request.attrs(Attributes.UserID)
     val itemCostValues = request.body.asFormUrlEncoded.get
-    print(itemCostValues)
 
     processAndCreateItemCost(userId, itemCostValues) match {
       case Left(itemCostToAdd) =>
