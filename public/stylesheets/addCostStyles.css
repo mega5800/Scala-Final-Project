@@ -7,7 +7,7 @@
 
 body
 {
-    height: 100vh;
+    height: 100vh; /*background color isn't shown bug fix*/
     padding: 0;
     margin: 0;
     background: linear-gradient(to right, #00AAFF, #00FF6C);
@@ -25,7 +25,6 @@ body
     width: 100px;
     height: 100px;
 }
-/*#endregion main-wrapper*/
 
 /*#region user details and button side by side*/
 #main-wrapper
@@ -34,19 +33,20 @@ body
     margin-left: -275px;
 }
 
-#email-detail
+#new-cost-details
 {
 }
 
-#send-button-grid
+#add-cost-buttons-grid
 {
     margin-top: -10px;
     margin-left: 75px;
 }
 /*#endregion user details and button side by side*/
+/*#endregion main-wrapper*/
 
-/*#region email-detail*/
-.email-detail
+/*#region new-cost-details*/
+.new-cost-details
 {
     display: grid;
     justify-content: center;
@@ -55,21 +55,20 @@ body
     margin-bottom: 10px;
 }
 
-.email-detail > label
+.new-cost-details > label
 {
     margin-left: auto;
     margin-right: auto;
 }
 
-.email-detail > input
+.new-cost-details > input
 {
     margin-left: auto;
     margin-right: auto;
 }
-/*#endregion email-detail*/
+/*#endregion new-cost-details*/
 
-/*#region send-button-grid*/
-.send-button-grid
+.add-cost-buttons-grid
 {
     display: grid;
     justify-content: center;
@@ -79,7 +78,7 @@ body
     margin-left: 50px;
 }
 
-.send-button-grid > input,a
+.add-cost-buttons-grid > input,a
 {
     cursor: pointer;
     font-size: 2rem;
@@ -88,8 +87,7 @@ body
     background-color: rgba(255, 255, 255, .75);
 }
 
-.send-button-grid > input:hover, a:hover
+.add-cost-buttons-grid > input:hover, a:hover
 {
     background-color: rgba(255, 255, 255, .9);
 }
-/*#endregion send-button-grid*/
