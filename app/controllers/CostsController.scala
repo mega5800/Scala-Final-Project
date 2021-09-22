@@ -78,11 +78,11 @@ class CostsController @Inject()(authenticatedAction: AuthenticatedAction, costsM
 
     val isNumeric = itemPriceString.matches("""\d+((\.)\d+)?""")
 
-    if(isNumeric){
+    if(isNumeric && itemPriceString.toInt > 0){
       itemPrice = Some(BigDecimal(itemPriceString))
     }
     else{
-      errorMessages = errorMessages + "Item price must be a numeric type,"
+      errorMessages = errorMessages + "Item price must be a numeric type and bigger than 0,"
     }
 
     if(errorMessages.isEmpty){
