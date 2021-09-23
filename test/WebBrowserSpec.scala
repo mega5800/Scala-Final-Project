@@ -40,9 +40,9 @@ class WebBrowserSpec extends PlaySpec with GuiceOneServerPerSuite with OneBrowse
       eventually {
         pageTitle mustBe "Register page"
         currentUrl mustBe registerPageUrl
-        val errorMessage = find(cssSelector("div.error-msg-grid span"))
+        val errorMessage = find(cssSelector("div.alert"))
         errorMessage.nonEmpty mustBe true
-        errorMessage.get.text mustBe "Failed to create user"
+        errorMessage.get.text contains "Failed to create user"
       }
     }
 
@@ -55,10 +55,10 @@ class WebBrowserSpec extends PlaySpec with GuiceOneServerPerSuite with OneBrowse
       eventually {
         pageTitle mustBe "Login page"
 
-        val errorMessage = find(cssSelector("div.error-msg-grid span"))
+        val errorMessage = find(cssSelector("div.alert"))
 
         errorMessage.nonEmpty mustBe true
-        errorMessage.get.text mustBe "Wrong username or password"
+        errorMessage.get.text contains "Wrong username or password"
       }
     }
 
@@ -112,10 +112,10 @@ class WebBrowserSpec extends PlaySpec with GuiceOneServerPerSuite with OneBrowse
         currentUrl mustBe addItemCostPage
         pageTitle mustBe "Add cost"
 
-        val addedSuccessfullyMessage = find(cssSelector("div span"))
+        val addedSuccessfullyMessage = find(cssSelector("div.alert"))
 
         addedSuccessfullyMessage.nonEmpty mustBe true
-        addedSuccessfullyMessage.get.text mustBe "Cost added successfully!"
+        addedSuccessfullyMessage.get.text contains "Cost added successfully!"
       }
     }
 
@@ -126,10 +126,10 @@ class WebBrowserSpec extends PlaySpec with GuiceOneServerPerSuite with OneBrowse
         currentUrl mustBe addItemCostPage
         pageTitle mustBe "Add cost"
 
-        val addedSuccessfullyMessage = find(cssSelector("div span"))
+        val addedSuccessfullyMessage = find(cssSelector("div.alert"))
 
         addedSuccessfullyMessage.nonEmpty mustBe true
-        addedSuccessfullyMessage.get.text mustBe "Item name must not be empty"
+        addedSuccessfullyMessage.get.text contains "Item name must not be empty"
       }
     }
 
@@ -140,10 +140,10 @@ class WebBrowserSpec extends PlaySpec with GuiceOneServerPerSuite with OneBrowse
         currentUrl mustBe addItemCostPage
         pageTitle mustBe "Add cost"
 
-        val addedSuccessfullyMessage = find(cssSelector("div span"))
+        val addedSuccessfullyMessage = find(cssSelector("div.alert"))
 
         addedSuccessfullyMessage.nonEmpty mustBe true
-        addedSuccessfullyMessage.get.text mustBe "Item price must be a numeric type"
+        addedSuccessfullyMessage.get.text contains "Item price must be a numeric type"
       }
     }
 
